@@ -4,14 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Podrugi — соцсеть для девушек Лондона</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="site-header">
-    <div class="logo">Podrugi</div>
-    <nav>
+    <img src="assets/logo.svg" alt="Podrugi" class="logo" />
+    <nav id="guestNav">
       <button id="loginBtn" class="btn btn-secondary">Войти</button>
       <button id="registerBtn" class="btn btn-primary">Регистрация</button>
+    </nav>
+    <nav id="userNav" class="hidden">
+      <span id="userGreeting"></span>
+      <button id="logoutBtn" class="btn btn-secondary">Выйти</button>
     </nav>
   </header>
 
@@ -24,12 +31,18 @@
     <section id="guestFeed" class="feed">
       <h2>Лента (для гостей — урезанная версия)</h2>
       <div class="post-card">
-        <p><strong>Аня, Shoreditch</strong></p>
-        <p>Ищу компанию на воскресную пробежку в парке 🏃‍♀️</p>
+        <div class="post-avatar">А</div>
+        <div class="post-body">
+          <p>Аня, Shoreditch</p>
+          <p>Ищу компанию на воскресную пробежку в парке 🏃‍♀️</p>
+        </div>
       </div>
       <div class="post-card">
-        <p><strong>Маша, Clapham</strong></p>
-        <p>Кто-нибудь знает хороший книжный клуб рядом?</p>
+        <div class="post-avatar">М</div>
+        <div class="post-body">
+          <p>Маша, Clapham</p>
+          <p>Кто-нибудь знает хороший книжный клуб рядом?</p>
+        </div>
       </div>
       <p class="feed-hint">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
     </section>

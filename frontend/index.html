@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Podrugi — соцсеть для девушек Лондона</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">Podrugi</div>
+    <nav>
+      <button id="loginBtn" class="btn btn-secondary">Войти</button>
+      <button id="registerBtn" class="btn btn-primary">Регистрация</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Найди своих в Лондоне</h1>
+      <p>Сообщество для девушек — знакомства по районам, встречи и поддержка.</p>
+    </section>
+
+    <section id="guestFeed" class="feed">
+      <h2>Лента (для гостей — урезанная версия)</h2>
+      <div class="post-card">
+        <p><strong>Аня, Shoreditch</strong></p>
+        <p>Ищу компанию на воскресную пробежку в парке 🏃‍♀️</p>
+      </div>
+      <div class="post-card">
+        <p><strong>Маша, Clapham</strong></p>
+        <p>Кто-нибудь знает хороший книжный клуб рядом?</p>
+      </div>
+      <p class="feed-hint">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
+    </section>
+  </main>
+
+  <div id="authModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="closeModal" class="modal-close">&times;</button>
+      <h2 id="modalTitle">Вход</h2>
+      <form id="authForm">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Пароль" required />
+        <input type="text" id="name" placeholder="Имя" class="hidden" />
+        <button type="submit" class="btn btn-primary">Отправить</button>
+      </form>
+      <p id="authMessage"></p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 Podrugi. podrugi.co.uk</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

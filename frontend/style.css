@@ -1,0 +1,155 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #2b2b33;
+  background: #fdf6f8;
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e0578f;
+}
+
+nav {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #e0578f;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #e0578f;
+  border: 1px solid #e0578f;
+}
+
+.hero {
+  text-align: center;
+  padding: 4rem 1rem 2rem;
+}
+
+.hero h1 {
+  font-size: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.hero p {
+  color: #6b6b75;
+}
+
+.feed {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3rem;
+}
+
+.feed h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #6b6b75;
+}
+
+.post-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.feed-hint {
+  text-align: center;
+  color: #9a9aa5;
+  font-size: 0.9rem;
+  margin-top: 1.5rem;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 360px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #9a9aa5;
+}
+
+#authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+#authForm input {
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#authMessage {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #6b6b75;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: #9a9aa5;
+  font-size: 0.85rem;
+}

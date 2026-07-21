@@ -190,6 +190,15 @@ a.post-card:visited {
   flex-wrap: wrap;
 }
 
+.author-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.author-link:hover {
+  text-decoration: underline;
+}
+
 .post-type-badge {
   font-size: 0.7rem;
   font-weight: 700;
@@ -503,6 +512,70 @@ a.post-card:visited {
 #authMessage {
   margin-top: 0.75rem;
   font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+
+.profile-menu {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.4rem;
+  min-width: 180px;
+  box-shadow: 0 8px 24px rgba(36, 31, 28, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 10;
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  min-height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: var(--bg);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 1.5rem 0 1rem;
+}
+
+.profile-header .post-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 1.4rem;
+}
+
+.profile-header h1 {
+  font-size: 1.3rem;
+}
+
+.profile-header p {
   color: var(--ink-secondary);
 }
 

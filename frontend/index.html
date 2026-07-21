@@ -18,10 +18,16 @@
     </nav>
     <nav id="userNav" class="hidden">
       <span id="userGreeting"></span>
-      <a href="friends.html" class="btn btn-secondary">Подруги</a>
-      <a href="messages.html" class="btn btn-secondary">Сообщения</a>
-      <a id="moderationLink" href="moderation.html" class="btn btn-secondary hidden">Модерация</a>
-      <button id="logoutBtn" class="btn btn-secondary">Выйти</button>
+      <div class="profile-menu">
+        <button id="profileMenuBtn" type="button" class="btn btn-secondary">Профиль ▾</button>
+        <div id="profileMenuDropdown" class="profile-dropdown hidden">
+          <a id="myProfileLink" href="profile.html">Мой профиль</a>
+          <a href="friends.html">Подруги</a>
+          <a href="messages.html">Сообщения</a>
+          <a id="moderationLink" href="moderation.html" class="hidden">Модерация</a>
+          <button id="logoutBtn" type="button">Выйти</button>
+        </div>
+      </div>
     </nav>
   </header>
 

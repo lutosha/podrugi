@@ -26,7 +26,11 @@ function renderFriends(friends) {
     body.className = 'post-body';
     const name = document.createElement('p');
     name.className = 'post-meta';
-    name.textContent = friend.city ? `${friend.name}, ${friend.city}` : friend.name;
+    const nameLink = document.createElement('a');
+    nameLink.className = 'author-link';
+    nameLink.href = `profile.html?id=${friend.id}`;
+    nameLink.textContent = friend.city ? `${friend.name}, ${friend.city}` : friend.name;
+    name.appendChild(nameLink);
     const messageLink = document.createElement('a');
     messageLink.className = 'link-btn';
     messageLink.textContent = 'Написать';

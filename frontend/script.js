@@ -21,6 +21,9 @@ const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
 const moderationLink = document.getElementById('moderationLink');
 const areaFilter = document.getElementById('areaFilter');
+const profileMenuBtn = document.getElementById('profileMenuBtn');
+const profileMenuDropdown = document.getElementById('profileMenuDropdown');
+const myProfileLink = document.getElementById('myProfileLink');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
@@ -59,6 +62,7 @@ function showLoggedIn(user) {
   postForm.classList.remove('hidden');
   feedHint.classList.add('hidden');
   moderationLink.classList.toggle('hidden', user.role !== 'MODERATOR' && user.role !== 'ADMIN');
+  myProfileLink.href = `profile.html?id=${user.id}`;
 }
 
 function showLoggedOut() {
@@ -268,7 +272,14 @@ function renderPosts(posts) {
 
     const meta = document.createElement('p');
     meta.className = 'post-meta';
-    meta.textContent = post.area ? `${post.author.name}, ${post.area}` : post.author.name;
+    const authorLink = document.createElement('a');
+    authorLink.className = 'author-link';
+    authorLink.href = `profile.html?id=${post.author.id}`;
+    authorLink.textContent = post.author.name;
+    meta.appendChild(authorLink);
+    if (post.area) {
+      meta.appendChild(document.createTextNode(`, ${post.area}`));
+    }
     if (post.type !== 'POST') {
       const badge = document.createElement('span');
       badge.className = 'post-type-badge';
@@ -351,6 +362,16 @@ async function fetchProfile() {
   showLoggedIn(user);
   fetchPosts();
 }
+
+profileMenuBtn.addEventListener('click', () => {
+  profileMenuDropdown.classList.toggle('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  if (!profileMenuDropdown.classList.contains('hidden') && !e.target.closest('.profile-menu')) {
+    profileMenuDropdown.classList.add('hidden');
+  }
+});
 
 document.getElementById('loginBtn').addEventListener('click', () => openModal('login'));
 document.getElementById('registerBtn').addEventListener('click', () => openModal('register'));

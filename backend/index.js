@@ -80,6 +80,11 @@ const messageSchema = z.object({
   content: z.string().trim().min(1).max(2000),
 });
 
+const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  city: z.string().trim().max(100).optional().or(z.literal('')),
+});
+
 const postInclude = {
   author: { select: { id: true, name: true, city: true } },
   comments: {
@@ -194,6 +199,21 @@ app.get('/api/profile', requireAuth, async (req, res) => {
   res.json(user);
 });
 
+app.patch('/api/profile', requireAuth, async (req, res) => {
+  const parsed = updateProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь имя и район' });
+  }
+  const { name, city } = parsed.data;
+
+  const user = await prisma.user.update({
+    where: { id: req.user.userId },
+    data: { name, city: city || null },
+    select: { id: true, email: true, name: true, city: true, role: true, createdAt: true },
+  });
+  res.json(user);
+});
+
 app.get('/api/users/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Некорректный id' });
@@ -239,11 +259,18 @@ app.get('/api/areas', async (req, res) => {
 app.get('/api/posts', optionalAuth, async (req, res) => {
   const blockedIds = await getBlockedUserIds(req.user?.userId);
   const followingIds = await getFollowingIds(req.user?.userId);
-  const { area } = req.query;
+  const { area, authorId } = req.query;
 
   const where = {};
-  if (blockedIds.length) where.authorId = { notIn: blockedIds };
   if (area) where.area = String(area);
+
+  if (authorId) {
+    const authorIdNum = Number(authorId);
+    if (blockedIds.includes(authorIdNum)) return res.json([]);
+    where.authorId = authorIdNum;
+  } else if (blockedIds.length) {
+    where.authorId = { notIn: blockedIds };
+  }
 
   const posts = await prisma.post.findMany({
     where,

@@ -20,6 +20,7 @@ const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
 const moderationLink = document.getElementById('moderationLink');
+const areaFilter = document.getElementById('areaFilter');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
@@ -303,13 +304,29 @@ function renderPosts(posts) {
 async function fetchPosts() {
   const token = localStorage.getItem('token');
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const query = areaFilter.value ? `?area=${encodeURIComponent(areaFilter.value)}` : '';
 
-  const res = await fetch(`${API_BASE_URL}/api/posts`, { headers });
+  const res = await fetch(`${API_BASE_URL}/api/posts${query}`, { headers });
   if (!res.ok) return;
 
   const posts = await res.json();
   renderPosts(posts);
 }
+
+async function fetchAreas() {
+  const res = await fetch(`${API_BASE_URL}/api/areas`);
+  if (!res.ok) return;
+
+  const areas = await res.json();
+  for (const area of areas) {
+    const option = document.createElement('option');
+    option.value = area;
+    option.textContent = area;
+    areaFilter.appendChild(option);
+  }
+}
+
+areaFilter.addEventListener('change', fetchPosts);
 
 async function fetchProfile() {
   const token = localStorage.getItem('token');
@@ -426,3 +443,4 @@ authForm.addEventListener('submit', async (e) => {
 });
 
 fetchProfile();
+fetchAreas();

@@ -226,12 +226,27 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   res.status(201).json(post);
 });
 
+app.get('/api/areas', async (req, res) => {
+  const posts = await prisma.post.findMany({
+    where: { area: { not: null } },
+    select: { area: true },
+    distinct: ['area'],
+    orderBy: { area: 'asc' },
+  });
+  res.json(posts.map((p) => p.area));
+});
+
 app.get('/api/posts', optionalAuth, async (req, res) => {
   const blockedIds = await getBlockedUserIds(req.user?.userId);
   const followingIds = await getFollowingIds(req.user?.userId);
+  const { area } = req.query;
+
+  const where = {};
+  if (blockedIds.length) where.authorId = { notIn: blockedIds };
+  if (area) where.area = String(area);
 
   const posts = await prisma.post.findMany({
-    where: blockedIds.length ? { authorId: { notIn: blockedIds } } : undefined,
+    where,
     orderBy: { createdAt: 'desc' },
     take: req.user ? 50 : 3,
     include: postInclude,

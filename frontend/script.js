@@ -212,6 +212,12 @@ function buildActionsSection(post) {
   section.append(reportBtn, reportForm);
 
   if (currentUser && currentUser.id !== post.author.id) {
+    const messageLink = document.createElement('a');
+    messageLink.className = 'link-btn';
+    messageLink.textContent = 'Написать';
+    messageLink.href = `messages.html?to=${post.author.id}&name=${encodeURIComponent(post.author.name)}`;
+    section.appendChild(messageLink);
+
     const blockBtn = document.createElement('button');
     blockBtn.type = 'button';
     blockBtn.className = 'link-btn';

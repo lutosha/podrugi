@@ -155,6 +155,13 @@ nav {
   margin-bottom: 0.75rem;
 }
 
+a.post-card,
+a.post-card:link,
+a.post-card:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
 .post-avatar {
   flex-shrink: 0;
   width: 42px;

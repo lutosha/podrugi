@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сообщения — Podrugi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <img src="assets/logo.svg" alt="Podrugi" class="logo" />
+    <a href="index.html" class="btn btn-secondary">На главную</a>
+  </header>
+
+  <main class="feed" style="max-width: 600px;">
+    <h1 id="pageTitle" style="margin: 1.5rem 0;">Сообщения</h1>
+    <p id="msgMessage"></p>
+    <div id="conversationsList"></div>
+
+    <div id="thread" class="hidden">
+      <div id="threadMessages"></div>
+      <form id="threadForm" class="comment-form" style="margin-top: 1rem;">
+        <input type="text" id="threadInput" placeholder="Написать сообщение..." maxlength="2000" required />
+        <button type="submit" class="btn btn-primary">Отправить</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="messages.js"></script>
+</body>
+</html>

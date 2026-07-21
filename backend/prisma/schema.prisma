@@ -27,6 +27,18 @@ model User {
   reportsAgainst  Report[] @relation("ReportsAgainst")
   blocksMade      Block[]  @relation("BlocksMade")
   blocksReceived  Block[]  @relation("BlocksReceived")
+  messagesSent      Message[] @relation("MessagesSent")
+  messagesReceived  Message[] @relation("MessagesReceived")
+}
+
+model Message {
+  id          Int      @id @default(autoincrement())
+  content     String
+  senderId    Int
+  sender      User     @relation("MessagesSent", fields: [senderId], references: [id])
+  recipientId Int
+  recipient   User     @relation("MessagesReceived", fields: [recipientId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
 enum PostType {

@@ -76,6 +76,10 @@ const reportStatusSchema = z.object({
   status: z.enum(['RESOLVED', 'DISMISSED']),
 });
 
+const messageSchema = z.object({
+  content: z.string().trim().min(1).max(2000),
+});
+
 const postInclude = {
   author: { select: { id: true, name: true, city: true } },
   comments: {
@@ -341,6 +345,66 @@ app.delete('/api/block/:userId', requireAuth, async (req, res) => {
     where: { blockerId: req.user.userId, blockedId },
   });
   res.status(204).send();
+});
+
+app.post('/api/messages/:userId', requireAuth, async (req, res) => {
+  const recipientId = Number(req.params.userId);
+  if (!Number.isInteger(recipientId)) return res.status(400).json({ error: 'Некорректный id' });
+  if (recipientId === req.user.userId) return res.status(400).json({ error: 'Нельзя написать самой себе' });
+
+  const parsed = messageSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь текст сообщения (1-2000 символов)' });
+  }
+
+  const recipient = await prisma.user.findUnique({ where: { id: recipientId } });
+  if (!recipient) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const blockedIds = await getBlockedUserIds(req.user.userId);
+  if (blockedIds.includes(recipientId)) {
+    return res.status(403).json({ error: 'Нельзя отправить сообщение (блокировка)' });
+  }
+
+  const message = await prisma.message.create({
+    data: { content: parsed.data.content, senderId: req.user.userId, recipientId },
+  });
+  res.status(201).json(message);
+});
+
+app.get('/api/messages/:userId', requireAuth, async (req, res) => {
+  const otherId = Number(req.params.userId);
+  if (!Number.isInteger(otherId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const messages = await prisma.message.findMany({
+    where: {
+      OR: [
+        { senderId: req.user.userId, recipientId: otherId },
+        { senderId: otherId, recipientId: req.user.userId },
+      ],
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+  res.json(messages);
+});
+
+app.get('/api/conversations', requireAuth, async (req, res) => {
+  const messages = await prisma.message.findMany({
+    where: { OR: [{ senderId: req.user.userId }, { recipientId: req.user.userId }] },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      sender: { select: { id: true, name: true } },
+      recipient: { select: { id: true, name: true } },
+    },
+  });
+
+  const conversations = new Map();
+  for (const message of messages) {
+    const other = message.senderId === req.user.userId ? message.recipient : message.sender;
+    if (!conversations.has(other.id)) {
+      conversations.set(other.id, { user: other, lastMessage: message.content, lastAt: message.createdAt });
+    }
+  }
+  res.json([...conversations.values()]);
 });
 
 app.listen(PORT, () => {

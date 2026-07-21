@@ -212,6 +212,21 @@ function buildActionsSection(post) {
   section.append(reportBtn, reportForm);
 
   if (currentUser && currentUser.id !== post.author.id) {
+    const followBtn = document.createElement('button');
+    followBtn.type = 'button';
+    followBtn.className = 'link-btn';
+    followBtn.textContent = post.authorIsFollowed ? 'В подругах ✓' : 'Добавить в подруги';
+    followBtn.addEventListener('click', async () => {
+      const token = localStorage.getItem('token');
+      const method = post.authorIsFollowed ? 'DELETE' : 'POST';
+      const res = await fetch(`${API_BASE_URL}/api/follow/${post.author.id}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok || res.status === 204) fetchPosts();
+    });
+    section.appendChild(followBtn);
+
     const messageLink = document.createElement('a');
     messageLink.className = 'link-btn';
     messageLink.textContent = 'Написать';

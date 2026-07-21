@@ -132,6 +132,15 @@ async function getBlockedUserIds(userId) {
   return blocks.map((b) => (b.blockerId === userId ? b.blockedId : b.blockerId));
 }
 
+async function getFollowingIds(userId) {
+  if (!userId) return [];
+  const follows = await prisma.follow.findMany({
+    where: { followerId: userId },
+    select: { followingId: true },
+  });
+  return follows.map((f) => f.followingId);
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -219,6 +228,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
 
 app.get('/api/posts', optionalAuth, async (req, res) => {
   const blockedIds = await getBlockedUserIds(req.user?.userId);
+  const followingIds = await getFollowingIds(req.user?.userId);
 
   const posts = await prisma.post.findMany({
     where: blockedIds.length ? { authorId: { notIn: blockedIds } } : undefined,
@@ -226,7 +236,12 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
     take: req.user ? 50 : 3,
     include: postInclude,
   });
-  res.json(posts);
+
+  const postsWithFollowInfo = posts.map((post) => ({
+    ...post,
+    authorIsFollowed: followingIds.includes(post.authorId),
+  }));
+  res.json(postsWithFollowInfo);
 });
 
 app.post('/api/posts/:id/comments', requireAuth, async (req, res) => {
@@ -405,6 +420,41 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
     }
   }
   res.json([...conversations.values()]);
+});
+
+app.post('/api/follow/:userId', requireAuth, async (req, res) => {
+  const followingId = Number(req.params.userId);
+  if (!Number.isInteger(followingId)) return res.status(400).json({ error: 'Некорректный id' });
+  if (followingId === req.user.userId) return res.status(400).json({ error: 'Нельзя подписаться на себя' });
+
+  const user = await prisma.user.findUnique({ where: { id: followingId } });
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const follow = await prisma.follow.upsert({
+    where: { followerId_followingId: { followerId: req.user.userId, followingId } },
+    update: {},
+    create: { followerId: req.user.userId, followingId },
+  });
+  res.status(201).json(follow);
+});
+
+app.delete('/api/follow/:userId', requireAuth, async (req, res) => {
+  const followingId = Number(req.params.userId);
+  if (!Number.isInteger(followingId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  await prisma.follow.deleteMany({
+    where: { followerId: req.user.userId, followingId },
+  });
+  res.status(204).send();
+});
+
+app.get('/api/friends', requireAuth, async (req, res) => {
+  const follows = await prisma.follow.findMany({
+    where: { followerId: req.user.userId },
+    include: { followingUser: { select: { id: true, name: true, city: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json(follows.map((f) => f.followingUser));
 });
 
 app.listen(PORT, () => {

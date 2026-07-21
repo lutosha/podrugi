@@ -15,10 +15,25 @@ const userGreeting = document.getElementById('userGreeting');
 const postForm = document.getElementById('postForm');
 const postContentInput = document.getElementById('postContent');
 const postAreaInput = document.getElementById('postArea');
+const postEventDateInput = document.getElementById('postEventDate');
+const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
 
+const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
+
 let mode = 'login';
+let selectedType = 'POST';
+let currentUser = null;
+
+typeTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    selectedType = tab.dataset.type;
+    typeTabs.forEach((t) => t.classList.toggle('active', t === tab));
+    postEventDateInput.classList.toggle('hidden', selectedType !== 'EVENT');
+    postEventDateInput.required = selectedType === 'EVENT';
+  });
+});
 
 function openModal(newMode) {
   mode = newMode;
@@ -35,6 +50,7 @@ function closeModal() {
 }
 
 function showLoggedIn(user) {
+  currentUser = user;
   guestNav.classList.add('hidden');
   userNav.classList.remove('hidden');
   userGreeting.textContent = `Привет, ${user.name}!`;
@@ -43,10 +59,109 @@ function showLoggedIn(user) {
 }
 
 function showLoggedOut() {
+  currentUser = null;
   guestNav.classList.remove('hidden');
   userNav.classList.add('hidden');
   postForm.classList.add('hidden');
   feedHint.classList.remove('hidden');
+}
+
+function formatEventDate(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function buildCommentsSection(post) {
+  const section = document.createElement('div');
+  section.className = 'post-comments';
+
+  for (const comment of post.comments) {
+    const commentEl = document.createElement('p');
+    commentEl.className = 'comment';
+    const authorSpan = document.createElement('span');
+    authorSpan.className = 'comment-author';
+    authorSpan.textContent = comment.author.name;
+    commentEl.append(authorSpan, document.createTextNode(comment.content));
+    section.appendChild(commentEl);
+  }
+
+  if (currentUser) {
+    const form = document.createElement('form');
+    form.className = 'comment-form';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Написать комментарий...';
+    input.maxLength = 1000;
+    input.required = true;
+
+    const button = document.createElement('button');
+    button.type = 'submit';
+    button.className = 'btn btn-secondary';
+    button.textContent = 'Ответить';
+
+    form.append(input, button);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: input.value }),
+      });
+      if (res.ok) {
+        fetchPosts();
+      }
+    });
+
+    section.appendChild(form);
+  }
+
+  return section;
+}
+
+function buildRsvpSection(post) {
+  const section = document.createElement('div');
+  section.className = 'post-rsvp';
+
+  const goingCount = post.rsvps.filter((r) => r.status === 'GOING').length;
+  const maybeCount = post.rsvps.filter((r) => r.status === 'MAYBE').length;
+  const myRsvp = currentUser ? post.rsvps.find((r) => r.userId === currentUser.id) : null;
+
+  const statuses = [
+    { status: 'GOING', label: `Иду (${goingCount})` },
+    { status: 'MAYBE', label: `Возможно (${maybeCount})` },
+  ];
+
+  for (const { status, label } of statuses) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'rsvp-btn';
+    button.classList.toggle('active', myRsvp?.status === status);
+    button.textContent = label;
+    button.disabled = !currentUser;
+
+    button.addEventListener('click', async () => {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        fetchPosts();
+      }
+    });
+
+    section.appendChild(button);
+  }
+
+  return section;
 }
 
 function renderPosts(posts) {
@@ -63,12 +178,31 @@ function renderPosts(posts) {
     body.className = 'post-body';
 
     const meta = document.createElement('p');
+    meta.className = 'post-meta';
     meta.textContent = post.area ? `${post.author.name}, ${post.area}` : post.author.name;
+    if (post.type !== 'POST') {
+      const badge = document.createElement('span');
+      badge.className = 'post-type-badge';
+      badge.textContent = TYPE_LABELS[post.type];
+      meta.appendChild(badge);
+    }
 
     const content = document.createElement('p');
+    content.className = 'post-content';
     content.textContent = post.content;
 
     body.append(meta, content);
+
+    if (post.type === 'EVENT') {
+      const eventDate = document.createElement('p');
+      eventDate.className = 'post-event-date';
+      eventDate.textContent = formatEventDate(post.eventDate);
+      body.appendChild(eventDate);
+      body.appendChild(buildRsvpSection(post));
+    }
+
+    body.appendChild(buildCommentsSection(post));
+
     card.append(avatar, body);
     postsList.appendChild(card);
   }
@@ -123,6 +257,15 @@ postForm.addEventListener('submit', async (e) => {
   const token = localStorage.getItem('token');
   const postMessage = document.getElementById('postMessage');
 
+  const body = {
+    type: selectedType,
+    content: postContentInput.value,
+    area: postAreaInput.value,
+  };
+  if (selectedType === 'EVENT') {
+    body.eventDate = postEventDateInput.value;
+  }
+
   try {
     const res = await fetch(`${API_BASE_URL}/api/posts`, {
       method: 'POST',
@@ -130,7 +273,7 @@ postForm.addEventListener('submit', async (e) => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ content: postContentInput.value, area: postAreaInput.value }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
 
@@ -141,6 +284,9 @@ postForm.addEventListener('submit', async (e) => {
 
     postMessage.textContent = '';
     postForm.reset();
+    selectedType = 'POST';
+    typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === 'POST'));
+    postEventDateInput.classList.add('hidden');
     fetchPosts();
   } catch {
     postMessage.textContent = 'Не удалось связаться с сервером';

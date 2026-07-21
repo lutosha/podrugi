@@ -49,9 +49,31 @@ const loginSchema = z.object({
 });
 
 const postSchema = z.object({
+  type: z.enum(['POST', 'ANNOUNCEMENT', 'EVENT']).default('POST'),
   content: z.string().trim().min(1).max(2000),
   area: z.string().trim().max(100).optional().or(z.literal('')),
+  eventDate: z.string().optional(),
+}).refine(
+  (data) => data.type !== 'EVENT' || (data.eventDate && !isNaN(Date.parse(data.eventDate))),
+  { message: 'Для события нужна корректная дата', path: ['eventDate'] },
+);
+
+const commentSchema = z.object({
+  content: z.string().trim().min(1).max(1000),
 });
+
+const rsvpSchema = z.object({
+  status: z.enum(['GOING', 'MAYBE']),
+});
+
+const postInclude = {
+  author: { select: { id: true, name: true, city: true } },
+  comments: {
+    orderBy: { createdAt: 'asc' },
+    include: { author: { select: { id: true, name: true } } },
+  },
+  rsvps: { select: { userId: true, status: true } },
+};
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -147,13 +169,19 @@ app.get('/api/users/:id', async (req, res) => {
 app.post('/api/posts', requireAuth, async (req, res) => {
   const parsed = postSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Проверь текст поста (1-2000 символов)' });
+    return res.status(400).json({ error: 'Проверь текст, тип и (для события) дату' });
   }
-  const { content, area } = parsed.data;
+  const { type, content, area, eventDate } = parsed.data;
 
   const post = await prisma.post.create({
-    data: { content, area: area || null, authorId: req.user.userId },
-    include: { author: { select: { id: true, name: true, city: true } } },
+    data: {
+      type,
+      content,
+      area: area || null,
+      eventDate: type === 'EVENT' ? new Date(eventDate) : null,
+      authorId: req.user.userId,
+    },
+    include: postInclude,
   });
   res.status(201).json(post);
 });
@@ -162,9 +190,49 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
   const posts = await prisma.post.findMany({
     orderBy: { createdAt: 'desc' },
     take: req.user ? 50 : 3,
-    include: { author: { select: { id: true, name: true, city: true } } },
+    include: postInclude,
   });
   res.json(posts);
+});
+
+app.post('/api/posts/:id/comments', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const parsed = commentSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь текст комментария (1-1000 символов)' });
+  }
+
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) return res.status(404).json({ error: 'Пост не найден' });
+
+  const comment = await prisma.comment.create({
+    data: { content: parsed.data.content, postId, authorId: req.user.userId },
+    include: { author: { select: { id: true, name: true } } },
+  });
+  res.status(201).json(comment);
+});
+
+app.post('/api/posts/:id/rsvp', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const parsed = rsvpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Статус должен быть GOING или MAYBE' });
+  }
+
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) return res.status(404).json({ error: 'Пост не найден' });
+  if (post.type !== 'EVENT') return res.status(400).json({ error: 'RSVP доступен только для событий' });
+
+  const rsvp = await prisma.rsvp.upsert({
+    where: { postId_userId: { postId, userId: req.user.userId } },
+    update: { status: parsed.data.status },
+    create: { postId, userId: req.user.userId, status: parsed.data.status },
+  });
+  res.status(201).json(rsvp);
 });
 
 app.listen(PORT, () => {

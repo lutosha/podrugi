@@ -31,8 +31,14 @@
     <section id="feed" class="feed">
       <h2 id="feedTitle">Лента</h2>
       <form id="postForm" class="post-form hidden">
+        <div class="type-tabs">
+          <button type="button" class="type-tab active" data-type="POST">Пост</button>
+          <button type="button" class="type-tab" data-type="ANNOUNCEMENT">Объявление</button>
+          <button type="button" class="type-tab" data-type="EVENT">Событие</button>
+        </div>
         <textarea id="postContent" placeholder="Что у тебя нового?" required maxlength="2000"></textarea>
         <input type="text" id="postArea" placeholder="Район (необязательно)" maxlength="100" />
+        <input type="datetime-local" id="postEventDate" class="hidden" />
         <button type="submit" class="btn btn-primary">Опубликовать</button>
         <p id="postMessage"></p>
       </form>

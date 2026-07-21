@@ -131,13 +131,131 @@ nav {
   font-size: 0.95rem;
 }
 
-.post-body p:first-child {
-  font-weight: 800;
-  margin-bottom: 2px;
+.post-body {
+  flex: 1;
+  min-width: 0;
 }
 
-.post-body p:last-child {
+.post-meta {
+  font-weight: 800;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.post-type-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent-dark);
+  background: #f6e3ea;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.post-content {
   color: var(--ink-secondary);
+  margin-bottom: 6px;
+}
+
+.post-event-date {
+  font-size: 0.85rem;
+  color: var(--accent-dark);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.post-rsvp {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.rsvp-btn {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rsvp-btn.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.post-comments {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.comment {
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.comment-author {
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.comment-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.comment-form input {
+  flex: 1;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.comment-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.comment-form button {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+}
+
+.type-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.type-tab {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.type-tab.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
 }
 
 .post-form {

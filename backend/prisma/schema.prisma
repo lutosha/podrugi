@@ -12,21 +12,60 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
   passwordHash  String
   name          String
   city          String?
-  ageConfirmed  Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  ageConfirmed  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
   posts         Post[]
+  comments      Comment[]
+  rsvps         Rsvp[]
+}
+
+enum PostType {
+  POST
+  ANNOUNCEMENT
+  EVENT
+}
+
+enum RsvpStatus {
+  GOING
+  MAYBE
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
+  type      PostType   @default(POST)
   content   String
   area      String?
+  eventDate DateTime?
+  authorId  Int
+  author    User       @relation(fields: [authorId], references: [id])
+  createdAt DateTime   @default(now())
+  comments  Comment[]
+  rsvps     Rsvp[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id])
   authorId  Int
   author    User     @relation(fields: [authorId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model Rsvp {
+  id        Int        @id @default(autoincrement())
+  status    RsvpStatus
+  postId    Int
+  post      Post       @relation(fields: [postId], references: [id])
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@unique([postId, userId])
 }

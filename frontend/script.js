@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
+  ? 'http://localhost:3000'
+  : 'https://podrugi-production.up.railway.app';
 
 const modal = document.getElementById('authModal');
 const modalTitle = document.getElementById('modalTitle');

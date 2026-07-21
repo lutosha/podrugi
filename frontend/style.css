@@ -174,6 +174,13 @@ a.post-card:visited {
   justify-content: center;
   font-weight: 600;
   font-size: 0.95rem;
+  overflow: hidden;
+}
+
+.post-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .post-body {
@@ -579,9 +586,104 @@ a.post-card:visited {
   color: var(--ink-secondary);
 }
 
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-upload .post-avatar {
+  width: 56px;
+  height: 56px;
+  font-size: 1.2rem;
+}
+
+.avatar-upload input[type="file"] {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--ink-secondary);
+}
+
 .site-footer {
   text-align: center;
   padding: 1.5rem;
   color: var(--ink-secondary);
   font-size: 0.85rem;
+}
+
+body.has-bottom-nav {
+  padding-bottom: 76px;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  padding: 4px max(4px, env(safe-area-inset-left)) calc(4px + env(safe-area-inset-bottom));
+  z-index: 30;
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  min-height: 56px;
+  background: none;
+  border: none;
+  color: var(--ink-secondary);
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.bottom-nav-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.bottom-nav-item.active {
+  color: var(--accent-dark);
+}
+
+.bottom-nav-compose .bottom-nav-icon {
+  color: #fff;
+  background: var(--ink);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.bottom-nav-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.7rem;
+  overflow: hidden;
+}
+
+.bottom-nav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

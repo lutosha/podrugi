@@ -10,7 +10,6 @@
 <body>
   <header class="site-header">
     <img src="assets/logo.svg" alt="Podrugi" class="logo" />
-    <a href="index.html" class="btn btn-secondary">На главную</a>
   </header>
 
   <main class="feed" style="max-width: 600px;">
@@ -26,6 +25,24 @@
       </form>
     </div>
   </main>
+
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <a href="index.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🏠</span><span>Лента</span>
+    </a>
+    <a href="friends.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👭</span><span>Подруги</span>
+    </a>
+    <a href="index.html?compose=1" class="bottom-nav-item bottom-nav-compose">
+      <span class="bottom-nav-icon">✚</span><span>Написать</span>
+    </a>
+    <a href="messages.html" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">💬</span><span>Сообщения</span>
+    </a>
+    <a id="bottomProfileLink" href="profile.html" class="bottom-nav-item">
+      <span id="bottomProfileAvatar" class="bottom-nav-avatar">👤</span><span>Профиль</span>
+    </a>
+  </nav>
 
   <script src="messages.js"></script>
 </body>

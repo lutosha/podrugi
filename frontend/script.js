@@ -10,8 +10,8 @@ const ageConfirmedInput = document.getElementById('ageConfirmed');
 const authForm = document.getElementById('authForm');
 const authMessage = document.getElementById('authMessage');
 const guestNav = document.getElementById('guestNav');
-const userNav = document.getElementById('userNav');
-const userGreeting = document.getElementById('userGreeting');
+const postModal = document.getElementById('postModal');
+const closePostModalBtn = document.getElementById('closePostModal');
 const postForm = document.getElementById('postForm');
 const postContentInput = document.getElementById('postContent');
 const postAreaInput = document.getElementById('postArea');
@@ -19,17 +19,31 @@ const postEventDateInput = document.getElementById('postEventDate');
 const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
-const moderationLink = document.getElementById('moderationLink');
 const areaFilter = document.getElementById('areaFilter');
-const profileMenuBtn = document.getElementById('profileMenuBtn');
-const profileMenuDropdown = document.getElementById('profileMenuDropdown');
-const myProfileLink = document.getElementById('myProfileLink');
+const bottomNav = document.getElementById('bottomNav');
+const bottomProfileLink = document.getElementById('bottomProfileLink');
+const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
+const composeNavBtn = document.getElementById('composeNavBtn');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
 let mode = 'login';
 let selectedType = 'POST';
 let currentUser = null;
+
+function buildAvatarElement(user) {
+  const el = document.createElement('div');
+  el.className = 'post-avatar';
+  if (user.avatar) {
+    const img = document.createElement('img');
+    img.src = user.avatar;
+    img.alt = '';
+    el.appendChild(img);
+  } else {
+    el.textContent = user.name.charAt(0).toUpperCase();
+  }
+  return el;
+}
 
 typeTabs.forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -54,24 +68,39 @@ function closeModal() {
   authForm.reset();
 }
 
+function openPostModal() {
+  postModal.classList.remove('hidden');
+}
+
+function closePostModal() {
+  postModal.classList.add('hidden');
+}
+
 function showLoggedIn(user) {
   currentUser = user;
   guestNav.classList.add('hidden');
-  userNav.classList.remove('hidden');
-  userGreeting.textContent = `Привет, ${user.name}!`;
-  postForm.classList.remove('hidden');
+  bottomNav.classList.remove('hidden');
+  document.body.classList.add('has-bottom-nav');
   feedHint.classList.add('hidden');
-  moderationLink.classList.toggle('hidden', user.role !== 'MODERATOR' && user.role !== 'ADMIN');
-  myProfileLink.href = `profile.html?id=${user.id}`;
+  bottomProfileLink.href = `profile.html?id=${user.id}`;
+  bottomProfileAvatar.innerHTML = '';
+  if (user.avatar) {
+    const img = document.createElement('img');
+    img.src = user.avatar;
+    img.alt = '';
+    bottomProfileAvatar.appendChild(img);
+  } else {
+    bottomProfileAvatar.textContent = user.name.charAt(0).toUpperCase();
+  }
 }
 
 function showLoggedOut() {
   currentUser = null;
   guestNav.classList.remove('hidden');
-  userNav.classList.add('hidden');
-  postForm.classList.add('hidden');
+  bottomNav.classList.add('hidden');
+  document.body.classList.remove('has-bottom-nav');
   feedHint.classList.remove('hidden');
-  moderationLink.classList.add('hidden');
+  closePostModal();
 }
 
 function formatEventDate(isoString) {
@@ -263,9 +292,7 @@ function renderPosts(posts) {
     const card = document.createElement('div');
     card.className = 'post-card';
 
-    const avatar = document.createElement('div');
-    avatar.className = 'post-avatar';
-    avatar.textContent = post.author.name.charAt(0).toUpperCase();
+    const avatar = buildAvatarElement(post.author);
 
     const body = document.createElement('div');
     body.className = 'post-body';
@@ -363,24 +390,16 @@ async function fetchProfile() {
   fetchPosts();
 }
 
-profileMenuBtn.addEventListener('click', () => {
-  profileMenuDropdown.classList.toggle('hidden');
+composeNavBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  openPostModal();
 });
 
-document.addEventListener('click', (e) => {
-  if (!profileMenuDropdown.classList.contains('hidden') && !e.target.closest('.profile-menu')) {
-    profileMenuDropdown.classList.add('hidden');
-  }
-});
+closePostModalBtn.addEventListener('click', closePostModal);
 
 document.getElementById('loginBtn').addEventListener('click', () => openModal('login'));
 document.getElementById('registerBtn').addEventListener('click', () => openModal('register'));
 document.getElementById('closeModal').addEventListener('click', closeModal);
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  localStorage.removeItem('token');
-  showLoggedOut();
-  fetchPosts();
-});
 
 postForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -417,6 +436,7 @@ postForm.addEventListener('submit', async (e) => {
     selectedType = 'POST';
     typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === 'POST'));
     postEventDateInput.classList.add('hidden');
+    closePostModal();
     fetchPosts();
   } catch {
     postMessage.textContent = 'Не удалось связаться с сервером';
@@ -463,5 +483,10 @@ authForm.addEventListener('submit', async (e) => {
   }
 });
 
-fetchProfile();
+fetchProfile().then(() => {
+  if (new URLSearchParams(location.search).get('compose') === '1' && currentUser) {
+    openPostModal();
+    history.replaceState(null, '', 'index.html');
+  }
+});
 fetchAreas();

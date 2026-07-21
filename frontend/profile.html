@@ -10,7 +10,6 @@
 <body>
   <header class="site-header">
     <img src="assets/logo.svg" alt="Podrugi" class="logo" />
-    <a href="index.html" class="btn btn-secondary">На главную</a>
   </header>
 
   <main class="feed" style="max-width: 600px;">
@@ -18,16 +17,39 @@
     <p id="profileMessage"></p>
 
     <form id="editProfileForm" class="post-form hidden">
+      <div class="avatar-upload">
+        <div id="avatarPreview" class="post-avatar"></div>
+        <input type="file" id="editAvatar" accept="image/*" />
+      </div>
       <input type="text" id="editName" placeholder="Имя" maxlength="100" required />
       <input type="text" id="editCity" placeholder="Район (необязательно)" maxlength="100" />
       <button type="submit" class="btn btn-primary">Сохранить</button>
     </form>
 
+    <div id="ownActions" class="post-actions hidden"></div>
     <div id="profileActions" class="post-actions"></div>
 
     <h2 style="margin: 1.5rem 0 1rem;">Посты</h2>
     <div id="profilePosts"></div>
   </main>
+
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <a href="index.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🏠</span><span>Лента</span>
+    </a>
+    <a href="friends.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👭</span><span>Подруги</span>
+    </a>
+    <a href="index.html?compose=1" class="bottom-nav-item bottom-nav-compose">
+      <span class="bottom-nav-icon">✚</span><span>Написать</span>
+    </a>
+    <a href="messages.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">💬</span><span>Сообщения</span>
+    </a>
+    <a id="bottomProfileLink" href="profile.html" class="bottom-nav-item active">
+      <span id="bottomProfileAvatar" class="bottom-nav-avatar">👤</span><span>Профиль</span>
+    </a>
+  </nav>
 
   <script src="profile.js"></script>
 </body>

@@ -83,10 +83,11 @@ const messageSchema = z.object({
 const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100),
   city: z.string().trim().max(100).optional().or(z.literal('')),
+  avatar: z.string().max(300000).optional().or(z.literal('')),
 });
 
 const postInclude = {
-  author: { select: { id: true, name: true, city: true } },
+  author: { select: { id: true, name: true, city: true, avatar: true } },
   comments: {
     orderBy: { createdAt: 'asc' },
     include: { author: { select: { id: true, name: true } } },
@@ -194,7 +195,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
 app.get('/api/profile', requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.userId },
-    select: { id: true, email: true, name: true, city: true, role: true, createdAt: true },
+    select: { id: true, email: true, name: true, city: true, avatar: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -202,14 +203,14 @@ app.get('/api/profile', requireAuth, async (req, res) => {
 app.patch('/api/profile', requireAuth, async (req, res) => {
   const parsed = updateProfileSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Проверь имя и район' });
+    return res.status(400).json({ error: 'Проверь имя, район и фото' });
   }
-  const { name, city } = parsed.data;
+  const { name, city, avatar } = parsed.data;
 
   const user = await prisma.user.update({
     where: { id: req.user.userId },
-    data: { name, city: city || null },
-    select: { id: true, email: true, name: true, city: true, role: true, createdAt: true },
+    data: { name, city: city || null, ...(avatar !== undefined ? { avatar: avatar || null } : {}) },
+    select: { id: true, email: true, name: true, city: true, avatar: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -220,7 +221,7 @@ app.get('/api/users/:id', async (req, res) => {
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, city: true, createdAt: true },
+    select: { id: true, name: true, city: true, avatar: true, createdAt: true },
   });
   if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
   res.json(user);
@@ -449,8 +450,8 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
     where: { OR: [{ senderId: req.user.userId }, { recipientId: req.user.userId }] },
     orderBy: { createdAt: 'desc' },
     include: {
-      sender: { select: { id: true, name: true } },
-      recipient: { select: { id: true, name: true } },
+      sender: { select: { id: true, name: true, avatar: true } },
+      recipient: { select: { id: true, name: true, avatar: true } },
     },
   });
 
@@ -493,7 +494,7 @@ app.delete('/api/follow/:userId', requireAuth, async (req, res) => {
 app.get('/api/friends', requireAuth, async (req, res) => {
   const follows = await prisma.follow.findMany({
     where: { followerId: req.user.userId },
-    include: { followingUser: { select: { id: true, name: true, city: true } } },
+    include: { followingUser: { select: { id: true, name: true, city: true, avatar: true } } },
     orderBy: { createdAt: 'desc' },
   });
   res.json(follows.map((f) => f.followingUser));

@@ -4,6 +4,9 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
 
 const modMessage = document.getElementById('modMessage');
 const reportsList = document.getElementById('reportsList');
+const bottomNav = document.getElementById('bottomNav');
+const bottomProfileLink = document.getElementById('bottomProfileLink');
+const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
 
 function describeTarget(report) {
   if (report.reportedPost) return `Пост: «${report.reportedPost.content}»`;
@@ -94,4 +97,35 @@ async function loadReports() {
   renderReports(reports);
 }
 
+async function initBottomNav() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    bottomNav.classList.add('hidden');
+    document.body.classList.remove('has-bottom-nav');
+    return;
+  }
+  document.body.classList.add('has-bottom-nav');
+  const res = await fetch(`${API_BASE_URL}/api/profile`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    bottomNav.classList.add('hidden');
+    document.body.classList.remove('has-bottom-nav');
+    return;
+  }
+  bottomNav.classList.remove('hidden');
+  const user = await res.json();
+  bottomProfileLink.href = `profile.html?id=${user.id}`;
+  bottomProfileAvatar.innerHTML = '';
+  if (user.avatar) {
+    const img = document.createElement('img');
+    img.src = user.avatar;
+    img.alt = '';
+    bottomProfileAvatar.appendChild(img);
+  } else {
+    bottomProfileAvatar.textContent = user.name.charAt(0).toUpperCase();
+  }
+}
+
 loadReports();
+initBottomNav();

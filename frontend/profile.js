@@ -3,6 +3,7 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
   : 'https://podrugi-production.up.railway.app';
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
+const AVATAR_SIZE = 160;
 
 const params = new URLSearchParams(location.search);
 const profileId = Number(params.get('id'));
@@ -13,11 +14,31 @@ const profileMessage = document.getElementById('profileMessage');
 const editProfileForm = document.getElementById('editProfileForm');
 const editNameInput = document.getElementById('editName');
 const editCityInput = document.getElementById('editCity');
+const editAvatarInput = document.getElementById('editAvatar');
+const avatarPreview = document.getElementById('avatarPreview');
+const ownActions = document.getElementById('ownActions');
 const profileActions = document.getElementById('profileActions');
 const profilePosts = document.getElementById('profilePosts');
+const bottomNav = document.getElementById('bottomNav');
+const bottomProfileLink = document.getElementById('bottomProfileLink');
+const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
 
 let currentUserId = null;
+let currentUserRole = null;
 let isFollowing = false;
+let pendingAvatarData = null;
+
+function setAvatarContent(el, user) {
+  el.innerHTML = '';
+  if (user.avatar) {
+    const img = document.createElement('img');
+    img.src = user.avatar;
+    img.alt = '';
+    el.appendChild(img);
+  } else {
+    el.textContent = user.name.charAt(0).toUpperCase();
+  }
+}
 
 function renderProfileHeader(user) {
   profileHeader.innerHTML = '';
@@ -26,7 +47,7 @@ function renderProfileHeader(user) {
 
   const avatar = document.createElement('div');
   avatar.className = 'post-avatar';
-  avatar.textContent = user.name.charAt(0).toUpperCase();
+  setAvatarContent(avatar, user);
 
   const info = document.createElement('div');
   const h1 = document.createElement('h1');
@@ -43,7 +64,29 @@ function buildOwnProfile(user) {
   renderProfileHeader(user);
   editNameInput.value = user.name;
   editCityInput.value = user.city || '';
+  setAvatarContent(avatarPreview, user);
   editProfileForm.classList.remove('hidden');
+
+  ownActions.innerHTML = '';
+  ownActions.classList.remove('hidden');
+
+  if (currentUserRole === 'MODERATOR' || currentUserRole === 'ADMIN') {
+    const modLink = document.createElement('a');
+    modLink.className = 'link-btn';
+    modLink.textContent = 'Модерация';
+    modLink.href = 'moderation.html';
+    ownActions.appendChild(modLink);
+  }
+
+  const logoutBtn = document.createElement('button');
+  logoutBtn.type = 'button';
+  logoutBtn.className = 'link-btn';
+  logoutBtn.textContent = 'Выйти';
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    location.href = 'index.html';
+  });
+  ownActions.appendChild(logoutBtn);
 }
 
 function buildOtherProfile(user) {
@@ -126,7 +169,7 @@ function renderPosts(posts) {
 
     const avatar = document.createElement('div');
     avatar.className = 'post-avatar';
-    avatar.textContent = post.author.name.charAt(0).toUpperCase();
+    setAvatarContent(avatar, post.author);
 
     const body = document.createElement('div');
     body.className = 'post-body';
@@ -146,6 +189,58 @@ function renderPosts(posts) {
     card.append(avatar, body);
     profilePosts.appendChild(card);
   }
+}
+
+function resizeImageToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = AVATAR_SIZE;
+        canvas.height = AVATAR_SIZE;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(AVATAR_SIZE / img.width, AVATAR_SIZE / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (AVATAR_SIZE - w) / 2, (AVATAR_SIZE - h) / 2, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+editAvatarInput.addEventListener('change', async () => {
+  const file = editAvatarInput.files[0];
+  if (!file) return;
+  pendingAvatarData = await resizeImageToDataUrl(file);
+  setAvatarContent(avatarPreview, { name: editNameInput.value || '?', avatar: pendingAvatarData });
+});
+
+async function initBottomNav() {
+  if (!token) {
+    bottomNav.classList.add('hidden');
+    document.body.classList.remove('has-bottom-nav');
+    return;
+  }
+  document.body.classList.add('has-bottom-nav');
+  const res = await fetch(`${API_BASE_URL}/api/profile`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    bottomNav.classList.add('hidden');
+    document.body.classList.remove('has-bottom-nav');
+    return;
+  }
+  bottomNav.classList.remove('hidden');
+  const user = await res.json();
+  bottomProfileLink.href = `profile.html?id=${user.id}`;
+  setAvatarContent(bottomProfileAvatar, user);
 }
 
 async function loadProfile() {
@@ -168,6 +263,7 @@ async function loadProfile() {
     if (meRes.ok) {
       const me = await meRes.json();
       currentUserId = me.id;
+      currentUserRole = me.role;
     }
   }
 
@@ -198,10 +294,13 @@ async function loadProfile() {
 
 editProfileForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const body = { name: editNameInput.value, city: editCityInput.value };
+  if (pendingAvatarData) body.avatar = pendingAvatarData;
+
   const res = await fetch(`${API_BASE_URL}/api/profile`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ name: editNameInput.value, city: editCityInput.value }),
+    body: JSON.stringify(body),
   });
   const data = await res.json();
 
@@ -211,7 +310,10 @@ editProfileForm.addEventListener('submit', async (e) => {
   }
 
   profileMessage.textContent = 'Сохранено!';
+  pendingAvatarData = null;
   renderProfileHeader(data);
+  setAvatarContent(bottomProfileAvatar, data);
 });
 
 loadProfile();
+initBottomNav();

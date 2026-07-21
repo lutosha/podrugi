@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGINS = [
   'https://podrugi.co.uk',
   'https://www.podrugi.co.uk',
+  'https://podrugi.netlify.app',
 ];
 
 app.use(cors({

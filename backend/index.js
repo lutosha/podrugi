@@ -48,6 +48,11 @@ const loginSchema = z.object({
   password: z.string().min(1).max(200),
 });
 
+const postSchema = z.object({
+  content: z.string().trim().min(1).max(2000),
+  area: z.string().trim().max(100).optional().or(z.literal('')),
+});
+
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
@@ -59,6 +64,19 @@ function requireAuth(req, res, next) {
   } catch {
     res.status(401).json({ error: 'Неверный или истёкший токен' });
   }
+}
+
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    try {
+      req.user = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      req.user = null;
+    }
+  }
+  next();
 }
 
 app.get('/api/health', (req, res) => {
@@ -112,6 +130,41 @@ app.get('/api/profile', requireAuth, async (req, res) => {
     select: { id: true, email: true, name: true, city: true, createdAt: true },
   });
   res.json(user);
+});
+
+app.get('/api/users/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, city: true, createdAt: true },
+  });
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+  res.json(user);
+});
+
+app.post('/api/posts', requireAuth, async (req, res) => {
+  const parsed = postSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь текст поста (1-2000 символов)' });
+  }
+  const { content, area } = parsed.data;
+
+  const post = await prisma.post.create({
+    data: { content, area: area || null, authorId: req.user.userId },
+    include: { author: { select: { id: true, name: true, city: true } } },
+  });
+  res.status(201).json(post);
+});
+
+app.get('/api/posts', optionalAuth, async (req, res) => {
+  const posts = await prisma.post.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: req.user ? 50 : 3,
+    include: { author: { select: { id: true, name: true, city: true } } },
+  });
+  res.json(posts);
 });
 
 app.listen(PORT, () => {

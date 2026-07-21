@@ -12,6 +12,11 @@ const authMessage = document.getElementById('authMessage');
 const guestNav = document.getElementById('guestNav');
 const userNav = document.getElementById('userNav');
 const userGreeting = document.getElementById('userGreeting');
+const postForm = document.getElementById('postForm');
+const postContentInput = document.getElementById('postContent');
+const postAreaInput = document.getElementById('postArea');
+const postsList = document.getElementById('postsList');
+const feedHint = document.getElementById('feedHint');
 
 let mode = 'login';
 
@@ -33,17 +38,58 @@ function showLoggedIn(user) {
   guestNav.classList.add('hidden');
   userNav.classList.remove('hidden');
   userGreeting.textContent = `Привет, ${user.name}!`;
+  postForm.classList.remove('hidden');
+  feedHint.classList.add('hidden');
 }
 
 function showLoggedOut() {
   guestNav.classList.remove('hidden');
   userNav.classList.add('hidden');
+  postForm.classList.add('hidden');
+  feedHint.classList.remove('hidden');
+}
+
+function renderPosts(posts) {
+  postsList.innerHTML = '';
+  for (const post of posts) {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'post-avatar';
+    avatar.textContent = post.author.name.charAt(0).toUpperCase();
+
+    const body = document.createElement('div');
+    body.className = 'post-body';
+
+    const meta = document.createElement('p');
+    meta.textContent = post.area ? `${post.author.name}, ${post.area}` : post.author.name;
+
+    const content = document.createElement('p');
+    content.textContent = post.content;
+
+    body.append(meta, content);
+    card.append(avatar, body);
+    postsList.appendChild(card);
+  }
+}
+
+async function fetchPosts() {
+  const token = localStorage.getItem('token');
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const res = await fetch(`${API_BASE_URL}/api/posts`, { headers });
+  if (!res.ok) return;
+
+  const posts = await res.json();
+  renderPosts(posts);
 }
 
 async function fetchProfile() {
   const token = localStorage.getItem('token');
   if (!token) {
     showLoggedOut();
+    fetchPosts();
     return;
   }
 
@@ -54,11 +100,13 @@ async function fetchProfile() {
   if (!res.ok) {
     localStorage.removeItem('token');
     showLoggedOut();
+    fetchPosts();
     return;
   }
 
   const user = await res.json();
   showLoggedIn(user);
+  fetchPosts();
 }
 
 document.getElementById('loginBtn').addEventListener('click', () => openModal('login'));
@@ -67,6 +115,36 @@ document.getElementById('closeModal').addEventListener('click', closeModal);
 document.getElementById('logoutBtn').addEventListener('click', () => {
   localStorage.removeItem('token');
   showLoggedOut();
+  fetchPosts();
+});
+
+postForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const token = localStorage.getItem('token');
+  const postMessage = document.getElementById('postMessage');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content: postContentInput.value, area: postAreaInput.value }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      postMessage.textContent = data.error || 'Не удалось опубликовать пост';
+      return;
+    }
+
+    postMessage.textContent = '';
+    postForm.reset();
+    fetchPosts();
+  } catch {
+    postMessage.textContent = 'Не удалось связаться с сервером';
+  }
 });
 
 authForm.addEventListener('submit', async (e) => {

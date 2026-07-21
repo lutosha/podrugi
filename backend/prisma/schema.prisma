@@ -19,4 +19,14 @@ model User {
   city          String?
   ageConfirmed  Boolean  @default(false)
   createdAt     DateTime @default(now())
+  posts         Post[]
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  content   String
+  area      String?
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
 }

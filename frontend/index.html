@@ -28,23 +28,16 @@
       <p>Сообщество для девушек — знакомства по районам, встречи и поддержка.</p>
     </section>
 
-    <section id="guestFeed" class="feed">
-      <h2>Лента (для гостей — урезанная версия)</h2>
-      <div class="post-card">
-        <div class="post-avatar">А</div>
-        <div class="post-body">
-          <p>Аня, Shoreditch</p>
-          <p>Ищу компанию на воскресную пробежку в парке 🏃‍♀️</p>
-        </div>
-      </div>
-      <div class="post-card">
-        <div class="post-avatar">М</div>
-        <div class="post-body">
-          <p>Маша, Clapham</p>
-          <p>Кто-нибудь знает хороший книжный клуб рядом?</p>
-        </div>
-      </div>
-      <p class="feed-hint">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
+    <section id="feed" class="feed">
+      <h2 id="feedTitle">Лента</h2>
+      <form id="postForm" class="post-form hidden">
+        <textarea id="postContent" placeholder="Что у тебя нового?" required maxlength="2000"></textarea>
+        <input type="text" id="postArea" placeholder="Район (необязательно)" maxlength="100" />
+        <button type="submit" class="btn btn-primary">Опубликовать</button>
+        <p id="postMessage"></p>
+      </form>
+      <div id="postsList"></div>
+      <p id="feedHint" class="feed-hint hidden">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
     </section>
   </main>
 

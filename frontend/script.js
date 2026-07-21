@@ -19,6 +19,7 @@ const postEventDateInput = document.getElementById('postEventDate');
 const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
+const moderationLink = document.getElementById('moderationLink');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
@@ -56,6 +57,7 @@ function showLoggedIn(user) {
   userGreeting.textContent = `Привет, ${user.name}!`;
   postForm.classList.remove('hidden');
   feedHint.classList.add('hidden');
+  moderationLink.classList.toggle('hidden', user.role !== 'MODERATOR' && user.role !== 'ADMIN');
 }
 
 function showLoggedOut() {
@@ -64,6 +66,7 @@ function showLoggedOut() {
   userNav.classList.add('hidden');
   postForm.classList.add('hidden');
   feedHint.classList.remove('hidden');
+  moderationLink.classList.add('hidden');
 }
 
 function formatEventDate(isoString) {
@@ -164,6 +167,70 @@ function buildRsvpSection(post) {
   return section;
 }
 
+function buildActionsSection(post) {
+  const section = document.createElement('div');
+  section.className = 'post-actions';
+
+  const reportBtn = document.createElement('button');
+  reportBtn.type = 'button';
+  reportBtn.className = 'link-btn';
+  reportBtn.textContent = 'Пожаловаться';
+
+  const reportForm = document.createElement('form');
+  reportForm.className = 'report-form hidden';
+  const reasonInput = document.createElement('input');
+  reasonInput.type = 'text';
+  reasonInput.placeholder = 'Причина жалобы...';
+  reasonInput.maxLength = 500;
+  reasonInput.required = true;
+  const reportSubmit = document.createElement('button');
+  reportSubmit.type = 'submit';
+  reportSubmit.className = 'btn btn-secondary';
+  reportSubmit.textContent = 'Отправить';
+  reportForm.append(reasonInput, reportSubmit);
+
+  reportBtn.addEventListener('click', () => {
+    reportForm.classList.toggle('hidden');
+  });
+
+  reportForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/api/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ targetType: 'POST', targetId: post.id, reason: reasonInput.value }),
+    });
+    if (res.ok) {
+      reportForm.classList.add('hidden');
+      reasonInput.value = '';
+      reportBtn.textContent = 'Жалоба отправлена';
+      reportBtn.disabled = true;
+    }
+  });
+
+  section.append(reportBtn, reportForm);
+
+  if (currentUser && currentUser.id !== post.author.id) {
+    const blockBtn = document.createElement('button');
+    blockBtn.type = 'button';
+    blockBtn.className = 'link-btn';
+    blockBtn.textContent = 'Заблокировать';
+    blockBtn.addEventListener('click', async () => {
+      if (!confirm(`Заблокировать ${post.author.name}? Её посты перестанут показываться тебе.`)) return;
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/block/${post.author.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) fetchPosts();
+    });
+    section.appendChild(blockBtn);
+  }
+
+  return section;
+}
+
 function renderPosts(posts) {
   postsList.innerHTML = '';
   for (const post of posts) {
@@ -199,6 +266,10 @@ function renderPosts(posts) {
       eventDate.textContent = formatEventDate(post.eventDate);
       body.appendChild(eventDate);
       body.appendChild(buildRsvpSection(post));
+    }
+
+    if (currentUser) {
+      body.appendChild(buildActionsSection(post));
     }
 
     body.appendChild(buildCommentsSection(post));

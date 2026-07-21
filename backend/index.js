@@ -66,6 +66,16 @@ const rsvpSchema = z.object({
   status: z.enum(['GOING', 'MAYBE']),
 });
 
+const reportSchema = z.object({
+  targetType: z.enum(['POST', 'USER']),
+  targetId: z.number().int(),
+  reason: z.string().trim().min(1).max(500),
+});
+
+const reportStatusSchema = z.object({
+  status: z.enum(['RESOLVED', 'DISMISSED']),
+});
+
 const postInclude = {
   author: { select: { id: true, name: true, city: true } },
   comments: {
@@ -99,6 +109,23 @@ function optionalAuth(req, res, next) {
     }
   }
   next();
+}
+
+async function requireModerator(req, res, next) {
+  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  if (!user || (user.role !== 'MODERATOR' && user.role !== 'ADMIN')) {
+    return res.status(403).json({ error: 'Доступно только модераторам' });
+  }
+  next();
+}
+
+async function getBlockedUserIds(userId) {
+  if (!userId) return [];
+  const blocks = await prisma.block.findMany({
+    where: { OR: [{ blockerId: userId }, { blockedId: userId }] },
+    select: { blockerId: true, blockedId: true },
+  });
+  return blocks.map((b) => (b.blockerId === userId ? b.blockedId : b.blockerId));
 }
 
 app.get('/api/health', (req, res) => {
@@ -149,7 +176,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
 app.get('/api/profile', requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.userId },
-    select: { id: true, email: true, name: true, city: true, createdAt: true },
+    select: { id: true, email: true, name: true, city: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -187,7 +214,10 @@ app.post('/api/posts', requireAuth, async (req, res) => {
 });
 
 app.get('/api/posts', optionalAuth, async (req, res) => {
+  const blockedIds = await getBlockedUserIds(req.user?.userId);
+
   const posts = await prisma.post.findMany({
+    where: blockedIds.length ? { authorId: { notIn: blockedIds } } : undefined,
     orderBy: { createdAt: 'desc' },
     take: req.user ? 50 : 3,
     include: postInclude,
@@ -233,6 +263,84 @@ app.post('/api/posts/:id/rsvp', requireAuth, async (req, res) => {
     create: { postId, userId: req.user.userId, status: parsed.data.status },
   });
   res.status(201).json(rsvp);
+});
+
+app.post('/api/reports', requireAuth, async (req, res) => {
+  const parsed = reportSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь тип цели, id и причину жалобы' });
+  }
+  const { targetType, targetId, reason } = parsed.data;
+
+  if (targetType === 'POST') {
+    const post = await prisma.post.findUnique({ where: { id: targetId } });
+    if (!post) return res.status(404).json({ error: 'Пост не найден' });
+  } else {
+    const user = await prisma.user.findUnique({ where: { id: targetId } });
+    if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+  }
+
+  const report = await prisma.report.create({
+    data: {
+      reason,
+      reporterId: req.user.userId,
+      reportedPostId: targetType === 'POST' ? targetId : null,
+      reportedUserId: targetType === 'USER' ? targetId : null,
+    },
+  });
+  res.status(201).json(report);
+});
+
+app.get('/api/reports', requireAuth, requireModerator, async (req, res) => {
+  const reports = await prisma.report.findMany({
+    where: { status: 'PENDING' },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      reporter: { select: { id: true, name: true } },
+      reportedPost: true,
+      reportedUser: { select: { id: true, name: true, email: true } },
+    },
+  });
+  res.json(reports);
+});
+
+app.patch('/api/reports/:id', requireAuth, requireModerator, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const parsed = reportStatusSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Статус должен быть RESOLVED или DISMISSED' });
+  }
+
+  const report = await prisma.report.update({
+    where: { id },
+    data: { status: parsed.data.status },
+  });
+  res.json(report);
+});
+
+app.post('/api/block/:userId', requireAuth, async (req, res) => {
+  const blockedId = Number(req.params.userId);
+  if (!Number.isInteger(blockedId)) return res.status(400).json({ error: 'Некорректный id' });
+  if (blockedId === req.user.userId) return res.status(400).json({ error: 'Нельзя заблокировать себя' });
+
+  const block = await prisma.block.upsert({
+    where: { blockerId_blockedId: { blockerId: req.user.userId, blockedId } },
+    update: {},
+    create: { blockerId: req.user.userId, blockedId },
+  });
+  res.status(201).json(block);
+});
+
+app.delete('/api/block/:userId', requireAuth, async (req, res) => {
+  const blockedId = Number(req.params.userId);
+  if (!Number.isInteger(blockedId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  await prisma.block.deleteMany({
+    where: { blockerId: req.user.userId, blockedId },
+  });
+  res.status(204).send();
 });
 
 app.listen(PORT, () => {

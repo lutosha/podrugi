@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const { z } = require('zod');
 const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const app = express();
@@ -25,6 +27,26 @@ app.use(cors({
   },
 }));
 app.use(express.json());
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Слишком много попыток, попробуй позже' },
+});
+
+const registerSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(8).max(200),
+  name: z.string().trim().min(1).max(100),
+  ageConfirmed: z.literal(true),
+});
+
+const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1).max(200),
+});
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -50,20 +72,30 @@ app.get('/api/users', async (req, res) => {
   res.json(users);
 });
 
-app.post('/api/register', async (req, res) => {
-  const { email, password, name } = req.body;
+app.post('/api/register', authLimiter, async (req, res) => {
+  const parsed = registerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь email, пароль (минимум 8 символов), имя и подтверждение возраста' });
+  }
+  const { email, password, name, ageConfirmed } = parsed.data;
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: 'Email уже зарегистрирован' });
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { email, passwordHash, name },
+    data: { email, passwordHash, name, ageConfirmed },
   });
   res.status(201).json({ id: user.id, email: user.email });
 });
 
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
+app.post('/api/login', authLimiter, async (req, res) => {
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Проверь email и пароль' });
+  }
+  const { email, password } = parsed.data;
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(401).json({ error: 'Неверный email или пароль' });
 

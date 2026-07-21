@@ -5,6 +5,8 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
 const modal = document.getElementById('authModal');
 const modalTitle = document.getElementById('modalTitle');
 const nameInput = document.getElementById('name');
+const ageLabel = document.getElementById('ageLabel');
+const ageConfirmedInput = document.getElementById('ageConfirmed');
 const authForm = document.getElementById('authForm');
 const authMessage = document.getElementById('authMessage');
 const guestNav = document.getElementById('guestNav');
@@ -17,6 +19,7 @@ function openModal(newMode) {
   mode = newMode;
   modalTitle.textContent = mode === 'login' ? 'Вход' : 'Регистрация';
   nameInput.classList.toggle('hidden', mode === 'login');
+  ageLabel.classList.toggle('hidden', mode === 'login');
   authMessage.textContent = '';
   modal.classList.remove('hidden');
 }
@@ -72,7 +75,9 @@ authForm.addEventListener('submit', async (e) => {
   const password = document.getElementById('password').value;
   const name = nameInput.value;
   const endpoint = mode === 'login' ? '/api/login' : '/api/register';
-  const body = mode === 'login' ? { email, password } : { email, password, name };
+  const body = mode === 'login'
+    ? { email, password }
+    : { email, password, name, ageConfirmed: ageConfirmedInput.checked };
 
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -92,6 +97,7 @@ authForm.addEventListener('submit', async (e) => {
       mode = 'login';
       modalTitle.textContent = 'Вход';
       nameInput.classList.add('hidden');
+      ageLabel.classList.add('hidden');
       return;
     }
 

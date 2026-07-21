@@ -196,6 +196,18 @@ nav {
   color: var(--ink);
 }
 
+.age-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+
+.age-label input {
+  width: auto;
+}
+
 #authForm input:focus {
   outline: none;
   border-color: var(--accent);

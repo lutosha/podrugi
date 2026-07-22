@@ -36,6 +36,8 @@ model User {
   messagesReceived  Message[] @relation("MessagesReceived")
   following         Follow[]  @relation("Following")
   followers         Follow[]  @relation("Followers")
+  notificationsReceived Notification[] @relation("NotificationsReceived")
+  notificationsSent     Notification[] @relation("NotificationsSent")
 }
 
 model Follow {
@@ -80,6 +82,13 @@ enum ReportStatus {
   PENDING
   RESOLVED
   DISMISSED
+}
+
+enum NotificationType {
+  FOLLOW
+  COMMENT
+  REACTION
+  RSVP
 }
 
 enum Borough {
@@ -156,6 +165,7 @@ model Post {
   rsvps     Rsvp[]
   reports   Report[]
   reactions Reaction[]
+  notifications Notification[]
 }
 
 model Comment {
@@ -189,4 +199,17 @@ model Reaction {
   createdAt DateTime @default(now())
 
   @@unique([postId, userId])
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  type        NotificationType
+  recipientId Int
+  recipient   User             @relation("NotificationsReceived", fields: [recipientId], references: [id])
+  actorId     Int
+  actor       User             @relation("NotificationsSent", fields: [actorId], references: [id])
+  postId      Int?
+  post        Post?            @relation(fields: [postId], references: [id])
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
 }

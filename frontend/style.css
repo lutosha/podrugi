@@ -811,6 +811,17 @@ body.has-bottom-nav {
   line-height: 1;
 }
 
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  font-size: 1.3rem;
+  text-decoration: none;
+}
+
 .nav-badge {
   position: absolute;
   top: -2px;

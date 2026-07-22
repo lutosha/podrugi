@@ -309,10 +309,11 @@ app.get('/api/boroughs', async (req, res) => {
 app.get('/api/posts', optionalAuth, async (req, res) => {
   const blockedIds = await getBlockedUserIds(req.user?.userId);
   const followingIds = await getFollowingIds(req.user?.userId);
-  const { borough, authorId, following } = req.query;
+  const { borough, authorId, following, type } = req.query;
 
   const where = { NOT: { type: 'EVENT', eventDate: { lt: new Date() } } };
   if (borough) where.borough = String(borough);
+  if (['POST', 'ANNOUNCEMENT', 'EVENT'].includes(String(type))) where.type = String(type);
 
   if (authorId) {
     const authorIdNum = Number(authorId);
@@ -416,6 +417,13 @@ app.post('/api/posts/:id/comments', requireAuth, async (req, res) => {
     data: { content: parsed.data.content, postId, authorId: req.user.userId },
     include: { author: { select: { id: true, name: true } } },
   });
+
+  if (post.authorId !== req.user.userId) {
+    await prisma.notification.create({
+      data: { type: 'COMMENT', recipientId: post.authorId, actorId: req.user.userId, postId },
+    });
+  }
+
   res.status(201).json(comment);
 });
 
@@ -441,11 +449,22 @@ app.post('/api/posts/:id/rsvp', requireAuth, async (req, res) => {
     }
   }
 
+  const existingRsvp = await prisma.rsvp.findUnique({
+    where: { postId_userId: { postId, userId: req.user.userId } },
+  });
+
   const rsvp = await prisma.rsvp.upsert({
     where: { postId_userId: { postId, userId: req.user.userId } },
     update: { status: parsed.data.status },
     create: { postId, userId: req.user.userId, status: parsed.data.status },
   });
+
+  if (post.authorId !== req.user.userId && existingRsvp?.status !== parsed.data.status) {
+    await prisma.notification.create({
+      data: { type: 'RSVP', recipientId: post.authorId, actorId: req.user.userId, postId },
+    });
+  }
+
   res.status(201).json(rsvp);
 });
 
@@ -456,11 +475,22 @@ app.post('/api/posts/:id/react', requireAuth, async (req, res) => {
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) return res.status(404).json({ error: 'Пост не найден' });
 
+  const existing = await prisma.reaction.findUnique({
+    where: { postId_userId: { postId, userId: req.user.userId } },
+  });
+
   const reaction = await prisma.reaction.upsert({
     where: { postId_userId: { postId, userId: req.user.userId } },
     update: {},
     create: { postId, userId: req.user.userId },
   });
+
+  if (!existing && post.authorId !== req.user.userId) {
+    await prisma.notification.create({
+      data: { type: 'REACTION', recipientId: post.authorId, actorId: req.user.userId, postId },
+    });
+  }
+
   res.status(201).json(reaction);
 });
 
@@ -623,11 +653,22 @@ app.post('/api/follow/:userId', requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: followingId } });
   if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
+  const existing = await prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId: req.user.userId, followingId } },
+  });
+
   const follow = await prisma.follow.upsert({
     where: { followerId_followingId: { followerId: req.user.userId, followingId } },
     update: {},
     create: { followerId: req.user.userId, followingId },
   });
+
+  if (!existing) {
+    await prisma.notification.create({
+      data: { type: 'FOLLOW', recipientId: followingId, actorId: req.user.userId },
+    });
+  }
+
   res.status(201).json(follow);
 });
 
@@ -677,8 +718,32 @@ app.get('/api/unread', requireAuth, async (req, res) => {
   const unreadFriends = await prisma.follow.count({
     where: { followingId: req.user.userId, createdAt: { gt: user.lastSeenFriendsAt } },
   });
+  const unreadNotifications = await prisma.notification.count({
+    where: { recipientId: req.user.userId, read: false },
+  });
 
-  res.json({ messages: unreadMessages > 0, friends: unreadFriends > 0 });
+  res.json({ messages: unreadMessages > 0, friends: unreadFriends > 0, notifications: unreadNotifications > 0 });
+});
+
+app.get('/api/notifications', requireAuth, async (req, res) => {
+  const notifications = await prisma.notification.findMany({
+    where: { recipientId: req.user.userId },
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+    include: {
+      actor: { select: { id: true, name: true, avatar: true } },
+      post: { select: { id: true, content: true, type: true } },
+    },
+  });
+  res.json(notifications);
+});
+
+app.post('/api/notifications/seen', requireAuth, async (req, res) => {
+  await prisma.notification.updateMany({
+    where: { recipientId: req.user.userId, read: false },
+    data: { read: true },
+  });
+  res.status(204).send();
 });
 
 app.post('/api/friends/seen', requireAuth, async (req, res) => {

@@ -22,11 +22,13 @@ const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
 const areaFilter = document.getElementById('areaFilter');
+const typeFilter = document.getElementById('typeFilter');
 const feedScope = document.getElementById('feedScope');
 const bottomNav = document.getElementById('bottomNav');
 const bottomProfileLink = document.getElementById('bottomProfileLink');
 const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
 const composeNavBtn = document.getElementById('composeNavBtn');
+const notificationsLink = document.getElementById('notificationsLink');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
@@ -83,6 +85,7 @@ let mode = 'login';
 let selectedType = 'POST';
 let currentUser = null;
 let selectedBorough = '';
+let selectedFeedType = '';
 let feedScopeValue = 'all';
 
 function buildAvatarElement(user) {
@@ -141,6 +144,7 @@ async function updateNavBadges() {
   const unread = await res.json();
   document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
   document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+  document.getElementById('notificationsBadge')?.classList.toggle('hidden', !unread.notifications);
 }
 
 function showLoggedIn(user) {
@@ -150,6 +154,7 @@ function showLoggedIn(user) {
   document.body.classList.add('has-bottom-nav');
   feedHint.classList.add('hidden');
   feedScope.classList.remove('hidden');
+  notificationsLink.classList.remove('hidden');
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   bottomProfileAvatar.innerHTML = '';
   if (user.avatar) {
@@ -171,6 +176,7 @@ function showLoggedOut() {
   feedHint.classList.remove('hidden');
   feedScope.classList.add('hidden');
   feedScopeValue = 'all';
+  notificationsLink.classList.add('hidden');
   closePostModal();
 }
 
@@ -470,6 +476,7 @@ async function fetchPosts() {
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const params = new URLSearchParams();
   if (selectedBorough) params.set('borough', selectedBorough);
+  if (selectedFeedType) params.set('type', selectedFeedType);
   if (feedScopeValue === 'following') params.set('following', '1');
   const query = params.toString() ? `?${params.toString()}` : '';
 
@@ -500,6 +507,16 @@ areaFilter.addEventListener('click', (e) => {
   if (!chip) return;
   selectedBorough = chip.dataset.borough || '';
   areaFilter.querySelectorAll('.area-chip').forEach((c) => {
+    c.classList.toggle('active', c === chip);
+  });
+  fetchPosts();
+});
+
+typeFilter.addEventListener('click', (e) => {
+  const chip = e.target.closest('.area-chip');
+  if (!chip) return;
+  selectedFeedType = chip.dataset.type || '';
+  typeFilter.querySelectorAll('.area-chip').forEach((c) => {
     c.classList.toggle('active', c === chip);
   });
   fetchPosts();

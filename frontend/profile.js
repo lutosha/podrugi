@@ -303,6 +303,7 @@ async function updateNavBadges(token) {
   const unread = await res.json();
   document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
   document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+  document.getElementById('notificationsBadge')?.classList.toggle('hidden', !unread.notifications);
 }
 
 async function initBottomNav() {
@@ -321,6 +322,7 @@ async function initBottomNav() {
     return;
   }
   bottomNav.classList.remove('hidden');
+  document.getElementById('notificationsLink').classList.remove('hidden');
   const user = await res.json();
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   setAvatarContent(bottomProfileAvatar, user);

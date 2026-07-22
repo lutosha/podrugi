@@ -12,6 +12,9 @@
 <body>
   <header class="site-header">
     <img src="assets/logo.svg" alt="Podrugi" class="logo" />
+    <a id="notificationsLink" href="notifications.html" class="notif-bell hidden">
+      🔔<span id="notificationsBadge" class="nav-badge hidden"></span>
+    </a>
     <nav id="guestNav">
       <button id="loginBtn" class="btn btn-secondary">Войти</button>
       <button id="registerBtn" class="btn btn-primary">Регистрация</button>
@@ -32,6 +35,12 @@
       </div>
       <div id="areaFilter" class="area-chips">
         <button type="button" class="area-chip active" data-borough="">Все районы</button>
+      </div>
+      <div id="typeFilter" class="area-chips">
+        <button type="button" class="area-chip active" data-type="">Все типы</button>
+        <button type="button" class="area-chip" data-type="POST">Посты</button>
+        <button type="button" class="area-chip" data-type="ANNOUNCEMENT">Объявления</button>
+        <button type="button" class="area-chip" data-type="EVENT">События</button>
       </div>
       <div id="postsList"></div>
       <p id="feedHint" class="feed-hint hidden">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>

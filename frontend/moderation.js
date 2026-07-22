@@ -114,6 +114,7 @@ async function initBottomNav() {
     return;
   }
   bottomNav.classList.remove('hidden');
+  document.getElementById('notificationsLink').classList.remove('hidden');
   const user = await res.json();
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   bottomProfileAvatar.innerHTML = '';
@@ -131,6 +132,7 @@ async function initBottomNav() {
     const unread = await unreadRes.json();
     document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
     document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+    document.getElementById('notificationsBadge')?.classList.toggle('hidden', !unread.notifications);
   }
 }
 

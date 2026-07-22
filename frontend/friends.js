@@ -1,6 +1,6 @@
 const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
   ? 'http://localhost:3000'
-  : 'https://podrugi-production.up.railway.app';
+  : 'https://api.podrugi.co.uk';
 
 const BOROUGHS = {
   BARKING_AND_DAGENHAM: 'Barking and Dagenham',

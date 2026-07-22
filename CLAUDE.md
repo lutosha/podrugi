@@ -12,11 +12,11 @@
 ## Хостинг и деплой
 
 - Репозиторий: github.com/lutosha/podrugi (владелец аккаунта — пользователь, лично).
-- **Frontend** — Netlify, publish directory `frontend`, автодеплой при пуше в `main`. Живой адрес: https://podrugi.netlify.app
-- **Backend** — Railway, Root Directory `backend`, автодеплой при пуше в `main`. Живой адрес: https://podrugi-production.up.railway.app
+- **Frontend** — Netlify, publish directory `frontend`, автодеплой при пуше в `main`. Живой адрес: https://podrugi.co.uk (запасной технический адрес Netlify: https://podrugi.netlify.app).
+- **Backend** — Railway, Root Directory `backend`, автодеплой при пуше в `main`. Живой адрес: https://api.podrugi.co.uk (запасной технический адрес Railway: https://podrugi-production.up.railway.app — оставлен в `ALLOWED_ORIGINS`/CORS, но фронтенд на него больше не ссылается).
 - **База** — Postgres в том же Railway-проекте, что и backend.
-- Прямой `git push` из терминала не работает — на компьютере не настроена авторизация GitHub. Пуши делаются через подключённый GitHub MCP-инструмент (`push_files` и т.д.), не через `git push`.
-- Домен `podrugi.co.uk` ещё не подключён к Netlify/Railway (это Урок 11 — в процессе).
+- Домен `podrugi.co.uk` подключён к обоим сервисам, SSL выпущен и работает на всех адресах (проверено `curl` — и `podrugi.co.uk`, и `api.podrugi.co.uk` отдают валидный HTTPS). Раньше здесь была запись «домен ещё не подключён» — устарела, оставлена в истории коммитов как урок: **эту секцию надо обновлять по факту, а не один раз в начале проекта**.
+- Прямой `git push` из терминала не работает — на компьютере не настроена авторизация GitHub (проверено: `git push` спрашивает пароль, а не токен через keychain). Пуш делается через **GitHub Desktop** (кнопка «Push origin», либо «Force push origin» через дропдаун ▾ у кнопки, если ветки разошлись).
 
 ## Переменные окружения
 
@@ -29,7 +29,7 @@
 - `prisma` и `dotenv` должны быть в `dependencies`, а не `devDependencies` — иначе на Railway (production install) не выполнится `prisma generate` и деплой упадёт с `Cannot find module '.prisma/client/default'`. Есть скрипт `postinstall: prisma generate` для подстраховки.
 - Скрипт `start` в `backend/package.json` НЕ должен использовать `--env-file=.env` (падает на Railway, там нет .env-файла, только переменные окружения). Флаг `--env-file` оставлен только в `dev`.
 - CORS в `backend/index.js` — список `ALLOWED_ORIGINS` нужно обновлять руками при добавлении нового домена (сейчас: `podrugi.co.uk`, `www.podrugi.co.uk`, `podrugi.netlify.app`, плюс localhost любого порта — для разработки).
-- `frontend/script.js`: `API_BASE_URL` сам переключается между локальным бэкендом и Railway в зависимости от `location.hostname` — не хардкодить один адрес.
+- Каждый самостоятельный JS-файл (`script.js`, `profile.js`, `friends.js`, `messages.js`, `moderation.js`) хранит свою копию `API_BASE_URL`, переключается между локальным бэкендом и `https://api.podrugi.co.uk` в зависимости от `location.hostname` — не хардкодить один адрес и не забывать поправить все 5 копий, если адрес бэкенда снова сменится.
 
 ## Дизайн
 
@@ -49,7 +49,7 @@ cd frontend && python3 -m http.server 8765   # http://localhost:8765
 
 ## Курс/прогресс
 
-Идём по уроку `uroki_server_i_backend_podrugi.pdf` (15 уроков про бэкенд, продолжение курса из 15 фронтенд-уроков). Пройдено: 1-11 (структура, Git, backend, БД, auth, CORS, деплой на Railway и Netlify, домен podrugi.co.uk подключён — фронтенд полностью на HTTPS, бэкенд-домен `api.podrugi.co.uk` ждёт SSL от Railway). Урок 12 (чек-лист безопасности) прочитан.
+Идём по уроку `uroki_server_i_backend_podrugi.pdf` (15 уроков про бэкенд, продолжение курса из 15 фронтенд-уроков). Пройдено: 1-11 (структура, Git, backend, БД, auth, CORS, деплой на Railway и Netlify, домен `podrugi.co.uk` подключён — и фронтенд, и бэкенд-домен `api.podrugi.co.uk` полностью на HTTPS с рабочим SSL). Урок 12 (чек-лист безопасности) прочитан.
 
 ## Дорожная карта фич (после уроков)
 

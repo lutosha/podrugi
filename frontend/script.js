@@ -29,6 +29,8 @@ const composeNavBtn = document.getElementById('composeNavBtn');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
+const FLAG_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
+
 const BOROUGHS = {
   BARKING_AND_DAGENHAM: 'Barking and Dagenham',
   BARNET: 'Barnet',
@@ -260,13 +262,13 @@ function buildActionsSection(post) {
   section.className = 'post-actions';
 
   const flagWrap = document.createElement('div');
-  flagWrap.className = 'flag-wrap';
+  flagWrap.className = 'flag-wrap flag-corner';
 
   const flagBtn = document.createElement('button');
   flagBtn.type = 'button';
   flagBtn.className = 'flag-btn';
   flagBtn.title = 'Пожаловаться или заблокировать';
-  flagBtn.textContent = '🚩';
+  flagBtn.innerHTML = FLAG_ICON_SVG;
 
   const flagMenu = document.createElement('div');
   flagMenu.className = 'flag-menu hidden';
@@ -317,7 +319,7 @@ function buildActionsSection(post) {
   });
 
   flagWrap.append(flagBtn, flagMenu);
-  section.append(flagWrap, reportForm);
+  section.appendChild(reportForm);
 
   if (currentUser && currentUser.id !== post.author.id) {
     const blockMenuBtn = document.createElement('button');
@@ -357,7 +359,7 @@ function buildActionsSection(post) {
     section.appendChild(messageLink);
   }
 
-  return section;
+  return { section, flagWrap };
 }
 
 function renderPosts(posts) {
@@ -403,7 +405,9 @@ function renderPosts(posts) {
     }
 
     if (currentUser) {
-      body.appendChild(buildActionsSection(post));
+      const { section, flagWrap } = buildActionsSection(post);
+      card.appendChild(flagWrap);
+      body.appendChild(section);
     }
 
     body.appendChild(buildCommentsSection(post));
@@ -488,7 +492,7 @@ async function fetchProfile() {
 }
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.post-actions')) {
+  if (!e.target.closest('.flag-wrap')) {
     document.querySelectorAll('.flag-menu').forEach((m) => m.classList.add('hidden'));
   }
 });

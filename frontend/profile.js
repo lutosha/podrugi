@@ -5,6 +5,8 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 const AVATAR_SIZE = 160;
 
+const FLAG_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
+
 const BOROUGHS = {
   BARKING_AND_DAGENHAM: 'Barking and Dagenham',
   BARNET: 'Barnet',
@@ -176,7 +178,7 @@ function buildOtherProfile(user) {
   flagBtn.type = 'button';
   flagBtn.className = 'flag-btn';
   flagBtn.title = 'Пожаловаться или заблокировать';
-  flagBtn.textContent = '🚩';
+  flagBtn.innerHTML = FLAG_ICON_SVG;
 
   const flagMenu = document.createElement('div');
   flagMenu.className = 'flag-menu hidden';

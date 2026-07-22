@@ -146,6 +146,7 @@ nav {
 }
 
 .post-card {
+  position: relative;
   display: flex;
   gap: 12px;
   background: var(--card);
@@ -195,6 +196,7 @@ a.post-card:visited {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  padding-right: 40px;
 }
 
 .author-link {
@@ -332,12 +334,14 @@ a.post-card:visited {
 }
 
 .flag-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   padding: 0.5rem;
   min-height: 40px;
   min-width: 40px;
-  font-size: 1rem;
   cursor: pointer;
   color: var(--ink-secondary);
   opacity: 0.7;
@@ -345,6 +349,35 @@ a.post-card:visited {
 
 .flag-btn:hover {
   opacity: 1;
+}
+
+.flag-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.flag-corner {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.flag-corner .flag-btn {
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0.3rem;
+}
+
+.flag-corner .flag-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.flag-corner .flag-menu {
+  left: auto;
+  right: 0;
 }
 
 .flag-menu {

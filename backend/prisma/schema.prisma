@@ -148,6 +148,7 @@ model Post {
   content   String
   borough   Borough?
   eventDate DateTime?
+  maxParticipants Int?
   authorId  Int
   author    User       @relation(fields: [authorId], references: [id])
   createdAt DateTime   @default(now())

@@ -17,6 +17,7 @@ const postForm = document.getElementById('postForm');
 const postContentInput = document.getElementById('postContent');
 const postBoroughInput = document.getElementById('postBorough');
 const postEventDateInput = document.getElementById('postEventDate');
+const postMaxParticipantsInput = document.getElementById('postMaxParticipants');
 const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
@@ -104,6 +105,7 @@ typeTabs.forEach((tab) => {
     typeTabs.forEach((t) => t.classList.toggle('active', t === tab));
     postEventDateInput.classList.toggle('hidden', selectedType !== 'EVENT');
     postEventDateInput.required = selectedType === 'EVENT';
+    postMaxParticipantsInput.classList.toggle('hidden', selectedType !== 'EVENT');
   });
 });
 
@@ -174,12 +176,11 @@ function showLoggedOut() {
 
 function formatEventDate(isoString) {
   const date = new Date(isoString);
-  return date.toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const options = { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
+  if (date.getFullYear() !== new Date().getFullYear()) {
+    options.year = 'numeric';
+  }
+  return date.toLocaleString('ru-RU', options);
 }
 
 function buildCommentsSection(post) {
@@ -238,9 +239,10 @@ function buildRsvpSection(post) {
   const goingCount = post.rsvps.filter((r) => r.status === 'GOING').length;
   const maybeCount = post.rsvps.filter((r) => r.status === 'MAYBE').length;
   const myRsvp = currentUser ? post.rsvps.find((r) => r.userId === currentUser.id) : null;
+  const isFull = post.maxParticipants != null && goingCount >= post.maxParticipants;
 
   const statuses = [
-    { status: 'GOING', label: `Иду (${goingCount})` },
+    { status: 'GOING', label: post.maxParticipants != null ? `Иду (${goingCount}/${post.maxParticipants})` : `Иду (${goingCount})` },
     { status: 'MAYBE', label: `Возможно (${maybeCount})` },
   ];
 
@@ -250,7 +252,7 @@ function buildRsvpSection(post) {
     button.className = 'rsvp-btn';
     button.classList.toggle('active', myRsvp?.status === status);
     button.textContent = label;
-    button.disabled = !currentUser;
+    button.disabled = !currentUser || (status === 'GOING' && isFull && myRsvp?.status !== 'GOING');
 
     button.addEventListener('click', async () => {
       const token = localStorage.getItem('token');
@@ -261,6 +263,9 @@ function buildRsvpSection(post) {
       });
       if (res.ok) {
         fetchPosts();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Не удалось отправить RSVP');
       }
     });
 
@@ -437,6 +442,12 @@ function renderPosts(posts) {
       eventDate.textContent = formatEventDate(post.eventDate);
       body.appendChild(eventDate);
       body.appendChild(buildRsvpSection(post));
+
+      const icsLink = document.createElement('a');
+      icsLink.className = 'link-btn';
+      icsLink.textContent = 'Добавить в календарь';
+      icsLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
+      body.appendChild(icsLink);
     }
 
     body.appendChild(buildReactionButton(post));
@@ -557,6 +568,7 @@ postForm.addEventListener('submit', async (e) => {
   };
   if (selectedType === 'EVENT') {
     body.eventDate = postEventDateInput.value;
+    body.maxParticipants = postMaxParticipantsInput.value;
   }
 
   try {
@@ -580,6 +592,7 @@ postForm.addEventListener('submit', async (e) => {
     selectedType = 'POST';
     typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === 'POST'));
     postEventDateInput.classList.add('hidden');
+    postMaxParticipantsInput.classList.add('hidden');
     closePostModal();
     fetchPosts();
   } catch {

@@ -54,6 +54,7 @@ const postSchema = z.object({
   content: z.string().trim().min(1).max(2000),
   borough: z.nativeEnum(Borough).optional().or(z.literal('')),
   eventDate: z.string().optional(),
+  maxParticipants: z.coerce.number().int().min(1).max(1000).optional().or(z.literal('')),
 }).refine(
   (data) => data.type !== 'EVENT' || (data.eventDate && !isNaN(Date.parse(data.eventDate))),
   { message: 'Для события нужна корректная дата', path: ['eventDate'] },
@@ -87,6 +88,42 @@ const updateProfileSchema = z.object({
   bio: z.string().trim().max(300).optional().or(z.literal('')),
   avatar: z.string().max(300000).optional().or(z.literal('')),
 });
+
+const BOROUGH_LABELS = {
+  BARKING_AND_DAGENHAM: 'Barking and Dagenham',
+  BARNET: 'Barnet',
+  BEXLEY: 'Bexley',
+  BRENT: 'Brent',
+  BROMLEY: 'Bromley',
+  CAMDEN: 'Camden',
+  CITY_OF_LONDON: 'City of London',
+  CROYDON: 'Croydon',
+  EALING: 'Ealing',
+  ENFIELD: 'Enfield',
+  GREENWICH: 'Greenwich',
+  HACKNEY: 'Hackney',
+  HAMMERSMITH_AND_FULHAM: 'Hammersmith and Fulham',
+  HARINGEY: 'Haringey',
+  HARROW: 'Harrow',
+  HAVERING: 'Havering',
+  HILLINGDON: 'Hillingdon',
+  HOUNSLOW: 'Hounslow',
+  ISLINGTON: 'Islington',
+  KENSINGTON_AND_CHELSEA: 'Kensington and Chelsea',
+  KINGSTON_UPON_THAMES: 'Kingston upon Thames',
+  LAMBETH: 'Lambeth',
+  LEWISHAM: 'Lewisham',
+  MERTON: 'Merton',
+  NEWHAM: 'Newham',
+  REDBRIDGE: 'Redbridge',
+  RICHMOND_UPON_THAMES: 'Richmond upon Thames',
+  SOUTHWARK: 'Southwark',
+  SUTTON: 'Sutton',
+  TOWER_HAMLETS: 'Tower Hamlets',
+  WALTHAM_FOREST: 'Waltham Forest',
+  WANDSWORTH: 'Wandsworth',
+  WESTMINSTER: 'Westminster',
+};
 
 const postInclude = {
   author: { select: { id: true, name: true, borough: true, avatar: true } },
@@ -243,7 +280,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'Проверь текст, тип и (для события) дату' });
   }
-  const { type, content, borough, eventDate } = parsed.data;
+  const { type, content, borough, eventDate, maxParticipants } = parsed.data;
 
   const post = await prisma.post.create({
     data: {
@@ -251,6 +288,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
       content,
       borough: borough || null,
       eventDate: type === 'EVENT' ? new Date(eventDate) : null,
+      maxParticipants: type === 'EVENT' && maxParticipants ? maxParticipants : null,
       authorId: req.user.userId,
     },
     include: postInclude,
@@ -273,7 +311,7 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
   const followingIds = await getFollowingIds(req.user?.userId);
   const { borough, authorId, following } = req.query;
 
-  const where = {};
+  const where = { NOT: { type: 'EVENT', eventDate: { lt: new Date() } } };
   if (borough) where.borough = String(borough);
 
   if (authorId) {
@@ -286,18 +324,80 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
     where.authorId = { notIn: blockedIds };
   }
 
+  const limit = req.user ? 50 : 3;
   const posts = await prisma.post.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    take: req.user ? 50 : 3,
+    take: limit * 4,
     include: postInclude,
   });
 
-  const postsWithFollowInfo = posts.map((post) => ({
+  const upcomingEvents = posts
+    .filter((p) => p.type === 'EVENT')
+    .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+  const others = posts.filter((p) => p.type !== 'EVENT');
+  const sortedPosts = [...upcomingEvents, ...others].slice(0, limit);
+
+  const postsWithFollowInfo = sortedPosts.map((post) => ({
     ...post,
     authorIsFollowed: followingIds.includes(post.authorId),
   }));
   res.json(postsWithFollowInfo);
+});
+
+function icsEscape(text) {
+  return String(text).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+function icsDate(date) {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+function icsFold(line) {
+  if (line.length <= 75) return line;
+  const chunks = [];
+  let rest = line;
+  while (rest.length > 75) {
+    chunks.push(rest.slice(0, 75));
+    rest = ' ' + rest.slice(75);
+  }
+  chunks.push(rest);
+  return chunks.join('\r\n');
+}
+
+app.get('/api/posts/:id/ics', async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: { author: { select: { name: true } } },
+  });
+  if (!post || post.type !== 'EVENT') return res.status(404).json({ error: 'Событие не найдено' });
+
+  const start = new Date(post.eventDate);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const location = post.borough ? BOROUGH_LABELS[post.borough] : '';
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Podrugi//RU',
+    'BEGIN:VEVENT',
+    `UID:post-${post.id}@podrugi.co.uk`,
+    `DTSTAMP:${icsDate(new Date())}`,
+    `DTSTART:${icsDate(start)}`,
+    `DTEND:${icsDate(end)}`,
+    `SUMMARY:${icsEscape(post.content.slice(0, 100))}`,
+    `DESCRIPTION:${icsEscape(`${post.author.name}: ${post.content}`)}`,
+    location ? `LOCATION:${icsEscape(location)}` : null,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].filter(Boolean).map(icsFold);
+
+  res.set('Content-Type', 'text/calendar; charset=utf-8');
+  res.set('Content-Disposition', `attachment; filename="event-${post.id}.ics"`);
+  res.send(lines.join('\r\n'));
 });
 
 app.post('/api/posts/:id/comments', requireAuth, async (req, res) => {
@@ -331,6 +431,15 @@ app.post('/api/posts/:id/rsvp', requireAuth, async (req, res) => {
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) return res.status(404).json({ error: 'Пост не найден' });
   if (post.type !== 'EVENT') return res.status(400).json({ error: 'RSVP доступен только для событий' });
+
+  if (parsed.data.status === 'GOING' && post.maxParticipants != null) {
+    const goingCount = await prisma.rsvp.count({
+      where: { postId, status: 'GOING', userId: { not: req.user.userId } },
+    });
+    if (goingCount >= post.maxParticipants) {
+      return res.status(400).json({ error: 'Достигнут лимит участников' });
+    }
+  }
 
   const rsvp = await prisma.rsvp.upsert({
     where: { postId_userId: { postId, userId: req.user.userId } },

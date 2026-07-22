@@ -83,6 +83,7 @@ const messageSchema = z.object({
 const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100),
   city: z.string().trim().max(100).optional().or(z.literal('')),
+  bio: z.string().trim().max(300).optional().or(z.literal('')),
   avatar: z.string().max(300000).optional().or(z.literal('')),
 });
 
@@ -195,7 +196,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
 app.get('/api/profile', requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.userId },
-    select: { id: true, email: true, name: true, city: true, avatar: true, role: true, createdAt: true },
+    select: { id: true, email: true, name: true, city: true, avatar: true, bio: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -203,14 +204,19 @@ app.get('/api/profile', requireAuth, async (req, res) => {
 app.patch('/api/profile', requireAuth, async (req, res) => {
   const parsed = updateProfileSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Проверь имя, район и фото' });
+    return res.status(400).json({ error: 'Проверь имя, район, фото и текст «о себе»' });
   }
-  const { name, city, avatar } = parsed.data;
+  const { name, city, bio, avatar } = parsed.data;
 
   const user = await prisma.user.update({
     where: { id: req.user.userId },
-    data: { name, city: city || null, ...(avatar !== undefined ? { avatar: avatar || null } : {}) },
-    select: { id: true, email: true, name: true, city: true, avatar: true, role: true, createdAt: true },
+    data: {
+      name,
+      city: city || null,
+      bio: bio || null,
+      ...(avatar !== undefined ? { avatar: avatar || null } : {}),
+    },
+    select: { id: true, email: true, name: true, city: true, avatar: true, bio: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -221,7 +227,7 @@ app.get('/api/users/:id', async (req, res) => {
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, city: true, avatar: true, createdAt: true },
+    select: { id: true, name: true, city: true, avatar: true, bio: true, createdAt: true },
   });
   if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
   res.json(user);
@@ -260,7 +266,7 @@ app.get('/api/areas', async (req, res) => {
 app.get('/api/posts', optionalAuth, async (req, res) => {
   const blockedIds = await getBlockedUserIds(req.user?.userId);
   const followingIds = await getFollowingIds(req.user?.userId);
-  const { area, authorId } = req.query;
+  const { area, authorId, following } = req.query;
 
   const where = {};
   if (area) where.area = String(area);
@@ -269,6 +275,8 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
     const authorIdNum = Number(authorId);
     if (blockedIds.includes(authorIdNum)) return res.json([]);
     where.authorId = authorIdNum;
+  } else if (following === '1') {
+    where.authorId = { in: followingIds.filter((id) => !blockedIds.includes(id)) };
   } else if (blockedIds.length) {
     where.authorId = { notIn: blockedIds };
   }

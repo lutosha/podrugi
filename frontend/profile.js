@@ -14,6 +14,7 @@ const profileMessage = document.getElementById('profileMessage');
 const editProfileForm = document.getElementById('editProfileForm');
 const editNameInput = document.getElementById('editName');
 const editCityInput = document.getElementById('editCity');
+const editBioInput = document.getElementById('editBio');
 const editAvatarInput = document.getElementById('editAvatar');
 const avatarPreview = document.getElementById('avatarPreview');
 const ownActions = document.getElementById('ownActions');
@@ -56,6 +57,13 @@ function renderProfileHeader(user) {
   cityP.textContent = user.city || 'Район не указан';
   info.append(h1, cityP);
 
+  if (user.bio) {
+    const bioP = document.createElement('p');
+    bioP.className = 'post-content';
+    bioP.textContent = user.bio;
+    info.appendChild(bioP);
+  }
+
   wrap.append(avatar, info);
   profileHeader.appendChild(wrap);
 }
@@ -64,6 +72,7 @@ function buildOwnProfile(user) {
   renderProfileHeader(user);
   editNameInput.value = user.name;
   editCityInput.value = user.city || '';
+  editBioInput.value = user.bio || '';
   setAvatarContent(avatarPreview, user);
   editProfileForm.classList.remove('hidden');
 
@@ -115,11 +124,27 @@ function buildOtherProfile(user) {
   messageLink.textContent = 'Написать';
   messageLink.href = `messages.html?to=${profileId}&name=${encodeURIComponent(user.name)}`;
 
-  const reportBtn = document.createElement('button');
-  reportBtn.type = 'button';
-  reportBtn.className = 'link-btn';
-  reportBtn.textContent = 'Пожаловаться';
-  reportBtn.addEventListener('click', async () => {
+  const flagWrap = document.createElement('div');
+  flagWrap.className = 'flag-wrap';
+
+  const flagBtn = document.createElement('button');
+  flagBtn.type = 'button';
+  flagBtn.className = 'flag-btn';
+  flagBtn.title = 'Пожаловаться или заблокировать';
+  flagBtn.textContent = '🚩';
+
+  const flagMenu = document.createElement('div');
+  flagMenu.className = 'flag-menu hidden';
+
+  flagBtn.addEventListener('click', () => {
+    flagMenu.classList.toggle('hidden');
+  });
+
+  const reportMenuBtn = document.createElement('button');
+  reportMenuBtn.type = 'button';
+  reportMenuBtn.textContent = 'Пожаловаться';
+  reportMenuBtn.addEventListener('click', async () => {
+    flagMenu.classList.add('hidden');
     const reason = prompt('Причина жалобы:');
     if (!reason) return;
     const res = await fetch(`${API_BASE_URL}/api/reports`, {
@@ -128,16 +153,16 @@ function buildOtherProfile(user) {
       body: JSON.stringify({ targetType: 'USER', targetId: profileId, reason }),
     });
     if (res.ok) {
-      reportBtn.textContent = 'Жалоба отправлена';
-      reportBtn.disabled = true;
+      reportMenuBtn.textContent = 'Жалоба отправлена';
+      reportMenuBtn.disabled = true;
     }
   });
 
-  const blockBtn = document.createElement('button');
-  blockBtn.type = 'button';
-  blockBtn.className = 'link-btn';
-  blockBtn.textContent = 'Заблокировать';
-  blockBtn.addEventListener('click', async () => {
+  const blockMenuBtn = document.createElement('button');
+  blockMenuBtn.type = 'button';
+  blockMenuBtn.textContent = 'Заблокировать';
+  blockMenuBtn.addEventListener('click', async () => {
+    flagMenu.classList.add('hidden');
     if (!confirm(`Заблокировать ${user.name}? Её посты перестанут показываться тебе.`)) return;
     const res = await fetch(`${API_BASE_URL}/api/block/${profileId}`, {
       method: 'POST',
@@ -150,7 +175,10 @@ function buildOtherProfile(user) {
     }
   });
 
-  profileActions.append(followBtn, messageLink, reportBtn, blockBtn);
+  flagMenu.append(reportMenuBtn, blockMenuBtn);
+  flagWrap.append(flagBtn, flagMenu);
+
+  profileActions.append(followBtn, messageLink, flagWrap);
 }
 
 function renderPosts(posts) {
@@ -294,7 +322,7 @@ async function loadProfile() {
 
 editProfileForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const body = { name: editNameInput.value, city: editCityInput.value };
+  const body = { name: editNameInput.value, city: editCityInput.value, bio: editBioInput.value };
   if (pendingAvatarData) body.avatar = pendingAvatarData;
 
   const res = await fetch(`${API_BASE_URL}/api/profile`, {
@@ -313,6 +341,12 @@ editProfileForm.addEventListener('submit', async (e) => {
   pendingAvatarData = null;
   renderProfileHeader(data);
   setAvatarContent(bottomProfileAvatar, data);
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.flag-wrap')) {
+    document.querySelectorAll('.flag-menu').forEach((m) => m.classList.add('hidden'));
+  }
 });
 
 loadProfile();

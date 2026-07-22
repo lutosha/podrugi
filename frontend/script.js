@@ -20,6 +20,7 @@ const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const feedHint = document.getElementById('feedHint');
 const areaFilter = document.getElementById('areaFilter');
+const feedScope = document.getElementById('feedScope');
 const bottomNav = document.getElementById('bottomNav');
 const bottomProfileLink = document.getElementById('bottomProfileLink');
 const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
@@ -30,6 +31,8 @@ const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EV
 let mode = 'login';
 let selectedType = 'POST';
 let currentUser = null;
+let selectedArea = '';
+let feedScopeValue = 'all';
 
 function buildAvatarElement(user) {
   const el = document.createElement('div');
@@ -82,6 +85,7 @@ function showLoggedIn(user) {
   bottomNav.classList.remove('hidden');
   document.body.classList.add('has-bottom-nav');
   feedHint.classList.add('hidden');
+  feedScope.classList.remove('hidden');
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   bottomProfileAvatar.innerHTML = '';
   if (user.avatar) {
@@ -100,6 +104,8 @@ function showLoggedOut() {
   bottomNav.classList.add('hidden');
   document.body.classList.remove('has-bottom-nav');
   feedHint.classList.remove('hidden');
+  feedScope.classList.add('hidden');
+  feedScopeValue = 'all';
   closePostModal();
 }
 
@@ -205,10 +211,17 @@ function buildActionsSection(post) {
   const section = document.createElement('div');
   section.className = 'post-actions';
 
-  const reportBtn = document.createElement('button');
-  reportBtn.type = 'button';
-  reportBtn.className = 'link-btn';
-  reportBtn.textContent = 'Пожаловаться';
+  const flagWrap = document.createElement('div');
+  flagWrap.className = 'flag-wrap';
+
+  const flagBtn = document.createElement('button');
+  flagBtn.type = 'button';
+  flagBtn.className = 'flag-btn';
+  flagBtn.title = 'Пожаловаться или заблокировать';
+  flagBtn.textContent = '🚩';
+
+  const flagMenu = document.createElement('div');
+  flagMenu.className = 'flag-menu hidden';
 
   const reportForm = document.createElement('form');
   reportForm.className = 'report-form hidden';
@@ -223,8 +236,20 @@ function buildActionsSection(post) {
   reportSubmit.textContent = 'Отправить';
   reportForm.append(reasonInput, reportSubmit);
 
-  reportBtn.addEventListener('click', () => {
-    reportForm.classList.toggle('hidden');
+  const reportMenuBtn = document.createElement('button');
+  reportMenuBtn.type = 'button';
+  reportMenuBtn.textContent = 'Пожаловаться';
+  reportMenuBtn.addEventListener('click', () => {
+    flagMenu.classList.add('hidden');
+    reportForm.classList.remove('hidden');
+  });
+  flagMenu.appendChild(reportMenuBtn);
+
+  flagBtn.addEventListener('click', () => {
+    document.querySelectorAll('.flag-menu').forEach((m) => {
+      if (m !== flagMenu) m.classList.add('hidden');
+    });
+    flagMenu.classList.toggle('hidden');
   });
 
   reportForm.addEventListener('submit', async (e) => {
@@ -238,14 +263,30 @@ function buildActionsSection(post) {
     if (res.ok) {
       reportForm.classList.add('hidden');
       reasonInput.value = '';
-      reportBtn.textContent = 'Жалоба отправлена';
-      reportBtn.disabled = true;
+      reportMenuBtn.textContent = 'Жалоба отправлена';
+      reportMenuBtn.disabled = true;
     }
   });
 
-  section.append(reportBtn, reportForm);
+  flagWrap.append(flagBtn, flagMenu);
+  section.append(flagWrap, reportForm);
 
   if (currentUser && currentUser.id !== post.author.id) {
+    const blockMenuBtn = document.createElement('button');
+    blockMenuBtn.type = 'button';
+    blockMenuBtn.textContent = 'Заблокировать';
+    blockMenuBtn.addEventListener('click', async () => {
+      flagMenu.classList.add('hidden');
+      if (!confirm(`Заблокировать ${post.author.name}? Её посты перестанут показываться тебе.`)) return;
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/block/${post.author.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) fetchPosts();
+    });
+    flagMenu.appendChild(blockMenuBtn);
+
     const followBtn = document.createElement('button');
     followBtn.type = 'button';
     followBtn.className = 'link-btn';
@@ -266,21 +307,6 @@ function buildActionsSection(post) {
     messageLink.textContent = 'Написать';
     messageLink.href = `messages.html?to=${post.author.id}&name=${encodeURIComponent(post.author.name)}`;
     section.appendChild(messageLink);
-
-    const blockBtn = document.createElement('button');
-    blockBtn.type = 'button';
-    blockBtn.className = 'link-btn';
-    blockBtn.textContent = 'Заблокировать';
-    blockBtn.addEventListener('click', async () => {
-      if (!confirm(`Заблокировать ${post.author.name}? Её посты перестанут показываться тебе.`)) return;
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/block/${post.author.id}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) fetchPosts();
-    });
-    section.appendChild(blockBtn);
   }
 
   return section;
@@ -342,7 +368,10 @@ function renderPosts(posts) {
 async function fetchPosts() {
   const token = localStorage.getItem('token');
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  const query = areaFilter.value ? `?area=${encodeURIComponent(areaFilter.value)}` : '';
+  const params = new URLSearchParams();
+  if (selectedArea) params.set('area', selectedArea);
+  if (feedScopeValue === 'following') params.set('following', '1');
+  const query = params.toString() ? `?${params.toString()}` : '';
 
   const res = await fetch(`${API_BASE_URL}/api/posts${query}`, { headers });
   if (!res.ok) return;
@@ -357,14 +386,34 @@ async function fetchAreas() {
 
   const areas = await res.json();
   for (const area of areas) {
-    const option = document.createElement('option');
-    option.value = area;
-    option.textContent = area;
-    areaFilter.appendChild(option);
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'area-chip';
+    chip.dataset.area = area;
+    chip.textContent = area;
+    areaFilter.appendChild(chip);
   }
 }
 
-areaFilter.addEventListener('change', fetchPosts);
+areaFilter.addEventListener('click', (e) => {
+  const chip = e.target.closest('.area-chip');
+  if (!chip) return;
+  selectedArea = chip.dataset.area;
+  areaFilter.querySelectorAll('.area-chip').forEach((c) => {
+    c.classList.toggle('active', c === chip);
+  });
+  fetchPosts();
+});
+
+feedScope.addEventListener('click', (e) => {
+  const btn = e.target.closest('.scope-btn');
+  if (!btn) return;
+  feedScopeValue = btn.dataset.scope;
+  feedScope.querySelectorAll('.scope-btn').forEach((b) => {
+    b.classList.toggle('active', b === btn);
+  });
+  fetchPosts();
+});
 
 async function fetchProfile() {
   const token = localStorage.getItem('token');
@@ -389,6 +438,12 @@ async function fetchProfile() {
   showLoggedIn(user);
   fetchPosts();
 }
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.post-actions')) {
+    document.querySelectorAll('.flag-menu').forEach((m) => m.classList.add('hidden'));
+  }
+});
 
 composeNavBtn.addEventListener('click', (e) => {
   e.preventDefault();

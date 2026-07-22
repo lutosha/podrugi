@@ -95,6 +95,7 @@ const postInclude = {
     include: { author: { select: { id: true, name: true } } },
   },
   rsvps: { select: { userId: true, status: true } },
+  reactions: { select: { userId: true } },
 };
 
 function requireAuth(req, res, next) {
@@ -339,6 +340,29 @@ app.post('/api/posts/:id/rsvp', requireAuth, async (req, res) => {
   res.status(201).json(rsvp);
 });
 
+app.post('/api/posts/:id/react', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) return res.status(404).json({ error: 'Пост не найден' });
+
+  const reaction = await prisma.reaction.upsert({
+    where: { postId_userId: { postId, userId: req.user.userId } },
+    update: {},
+    create: { postId, userId: req.user.userId },
+  });
+  res.status(201).json(reaction);
+});
+
+app.delete('/api/posts/:id/react', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  await prisma.reaction.deleteMany({ where: { postId, userId: req.user.userId } });
+  res.status(204).send();
+});
+
 app.post('/api/reports', requireAuth, async (req, res) => {
   const parsed = reportSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -414,6 +438,11 @@ app.delete('/api/block/:userId', requireAuth, async (req, res) => {
   await prisma.block.deleteMany({
     where: { blockerId: req.user.userId, blockedId },
   });
+  res.status(204).send();
+});
+
+app.post('/api/messages/seen', requireAuth, async (req, res) => {
+  await prisma.user.update({ where: { id: req.user.userId }, data: { lastSeenMessagesAt: new Date() } });
   res.status(204).send();
 });
 
@@ -510,6 +539,27 @@ app.get('/api/friends', requireAuth, async (req, res) => {
     orderBy: { createdAt: 'desc' },
   });
   res.json(follows.map((f) => f.followingUser));
+});
+
+app.get('/api/unread', requireAuth, async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { lastSeenMessagesAt: true, lastSeenFriendsAt: true },
+  });
+
+  const unreadMessages = await prisma.message.count({
+    where: { recipientId: req.user.userId, createdAt: { gt: user.lastSeenMessagesAt } },
+  });
+  const unreadFriends = await prisma.follow.count({
+    where: { followingId: req.user.userId, createdAt: { gt: user.lastSeenFriendsAt } },
+  });
+
+  res.json({ messages: unreadMessages > 0, friends: unreadFriends > 0 });
+});
+
+app.post('/api/friends/seen', requireAuth, async (req, res) => {
+  await prisma.user.update({ where: { id: req.user.userId }, data: { lastSeenFriendsAt: new Date() } });
+  res.status(204).send();
 });
 
 app.listen(PORT, () => {

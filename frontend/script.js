@@ -31,6 +31,8 @@ const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EV
 
 const FLAG_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
 
+const HEART_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+
 const BOROUGHS = {
   BARKING_AND_DAGENHAM: 'Barking and Dagenham',
   BARNET: 'Barnet',
@@ -129,6 +131,16 @@ function closePostModal() {
   postModal.classList.add('hidden');
 }
 
+async function updateNavBadges() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  const res = await fetch(`${API_BASE_URL}/api/unread`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return;
+  const unread = await res.json();
+  document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
+  document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+}
+
 function showLoggedIn(user) {
   currentUser = user;
   guestNav.classList.add('hidden');
@@ -146,6 +158,7 @@ function showLoggedIn(user) {
   } else {
     bottomProfileAvatar.textContent = user.name.charAt(0).toUpperCase();
   }
+  updateNavBadges();
 }
 
 function showLoggedOut() {
@@ -255,6 +268,28 @@ function buildRsvpSection(post) {
   }
 
   return section;
+}
+
+function buildReactionButton(post) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'reaction-btn';
+  const myReaction = currentUser ? post.reactions.some((r) => r.userId === currentUser.id) : false;
+  button.classList.toggle('active', myReaction);
+  button.disabled = !currentUser;
+  button.innerHTML = `${HEART_ICON_SVG}<span>${post.reactions.length}</span>`;
+
+  button.addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+    const method = myReaction ? 'DELETE' : 'POST';
+    const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}/react`, {
+      method,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok || res.status === 204) fetchPosts();
+  });
+
+  return button;
 }
 
 function buildActionsSection(post) {
@@ -403,6 +438,8 @@ function renderPosts(posts) {
       body.appendChild(eventDate);
       body.appendChild(buildRsvpSection(post));
     }
+
+    body.appendChild(buildReactionButton(post));
 
     if (currentUser) {
       const { section, flagWrap } = buildActionsSection(post);

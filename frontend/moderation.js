@@ -125,6 +125,13 @@ async function initBottomNav() {
   } else {
     bottomProfileAvatar.textContent = user.name.charAt(0).toUpperCase();
   }
+
+  const unreadRes = await fetch(`${API_BASE_URL}/api/unread`, { headers: { Authorization: `Bearer ${token}` } });
+  if (unreadRes.ok) {
+    const unread = await unreadRes.json();
+    document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
+    document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+  }
 }
 
 loadReports();

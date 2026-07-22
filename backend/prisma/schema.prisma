@@ -21,10 +21,13 @@ model User {
   bio           String?
   ageConfirmed  Boolean   @default(false)
   role          Role      @default(USER)
+  lastSeenMessagesAt  DateTime @default(now())
+  lastSeenFriendsAt   DateTime @default(now())
   createdAt     DateTime  @default(now())
   posts         Post[]
   comments      Comment[]
   rsvps         Rsvp[]
+  reactions     Reaction[]
   reportsMade     Report[] @relation("ReportsMade")
   reportsAgainst  Report[] @relation("ReportsAgainst")
   blocksMade      Block[]  @relation("BlocksMade")
@@ -151,6 +154,7 @@ model Post {
   comments  Comment[]
   rsvps     Rsvp[]
   reports   Report[]
+  reactions Reaction[]
 }
 
 model Comment {
@@ -171,6 +175,17 @@ model Rsvp {
   userId    Int
   user      User       @relation(fields: [userId], references: [id])
   createdAt DateTime   @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Reaction {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 
   @@unique([postId, userId])
 }

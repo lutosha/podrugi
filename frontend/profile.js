@@ -297,6 +297,14 @@ editAvatarInput.addEventListener('change', async () => {
   setAvatarContent(avatarPreview, { name: editNameInput.value || '?', avatar: pendingAvatarData });
 });
 
+async function updateNavBadges(token) {
+  const res = await fetch(`${API_BASE_URL}/api/unread`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return;
+  const unread = await res.json();
+  document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
+  document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+}
+
 async function initBottomNav() {
   if (!token) {
     bottomNav.classList.add('hidden');
@@ -316,6 +324,7 @@ async function initBottomNav() {
   const user = await res.json();
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   setAvatarContent(bottomProfileAvatar, user);
+  updateNavBadges(token);
 }
 
 async function loadProfile() {

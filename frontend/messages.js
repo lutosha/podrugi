@@ -101,6 +101,14 @@ async function loadThread() {
   renderThread(messages);
 }
 
+async function updateNavBadges() {
+  const res = await fetch(`${API_BASE_URL}/api/unread`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return;
+  const unread = await res.json();
+  document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
+  document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
+}
+
 async function initBottomNav() {
   if (!token) {
     bottomNav.classList.add('hidden');
@@ -120,6 +128,7 @@ async function initBottomNav() {
   const user = await res.json();
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   setAvatarContent(bottomProfileAvatar, user);
+  updateNavBadges();
 }
 
 if (!token) {
@@ -149,3 +158,10 @@ if (!token) {
 }
 
 initBottomNav();
+
+if (token) {
+  fetch(`${API_BASE_URL}/api/messages/seen`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

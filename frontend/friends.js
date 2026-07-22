@@ -108,6 +108,19 @@ async function loadFriends() {
   }
   const friends = await res.json();
   renderFriends(friends);
+
+  await fetch(`${API_BASE_URL}/api/friends/seen`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+async function updateNavBadges() {
+  const res = await fetch(`${API_BASE_URL}/api/unread`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return;
+  const unread = await res.json();
+  document.getElementById('friendsBadge')?.classList.toggle('hidden', !unread.friends);
+  document.getElementById('messagesBadge')?.classList.toggle('hidden', !unread.messages);
 }
 
 async function initBottomNav() {
@@ -129,6 +142,7 @@ async function initBottomNav() {
   const user = await res.json();
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   setAvatarContent(bottomProfileAvatar, user);
+  updateNavBadges();
 }
 
 loadFriends();

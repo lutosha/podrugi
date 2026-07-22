@@ -199,6 +199,9 @@ app.get('/api/profile', requireAuth, async (req, res) => {
     where: { id: req.user.userId },
     select: { id: true, email: true, name: true, borough: true, avatar: true, bio: true, role: true, createdAt: true },
   });
+  if (!user) {
+    return res.status(401).json({ error: 'Пользователь не найден' });
+  }
   res.json(user);
 });
 

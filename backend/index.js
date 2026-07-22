@@ -650,6 +650,21 @@ app.get('/api/friends', requireAuth, async (req, res) => {
   res.json(follows.map((f) => f.followingUser));
 });
 
+app.get('/api/nearby', requireAuth, async (req, res) => {
+  const me = await prisma.user.findUnique({ where: { id: req.user.userId }, select: { borough: true } });
+  const blockedIds = await getBlockedUserIds(req.user.userId);
+  const followingIds = await getFollowingIds(req.user.userId);
+  const excludeIds = [req.user.userId, ...blockedIds, ...followingIds];
+
+  const users = await prisma.user.findMany({
+    where: { borough: me.borough, id: { notIn: excludeIds } },
+    select: { id: true, name: true, borough: true, avatar: true, bio: true },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+  res.json(users);
+});
+
 app.get('/api/unread', requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.userId },

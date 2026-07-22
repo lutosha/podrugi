@@ -40,6 +40,8 @@ const BOROUGHS = {
 
 const friendsMessage = document.getElementById('friendsMessage');
 const friendsList = document.getElementById('friendsList');
+const nearbyMessage = document.getElementById('nearbyMessage');
+const nearbyList = document.getElementById('nearbyList');
 const bottomNav = document.getElementById('bottomNav');
 const bottomProfileLink = document.getElementById('bottomProfileLink');
 const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
@@ -115,6 +117,76 @@ async function loadFriends() {
   });
 }
 
+function renderNearby(users) {
+  nearbyList.innerHTML = '';
+  if (users.length === 0) {
+    nearbyMessage.textContent = 'Пока никого не нашлось в твоём районе.';
+    return;
+  }
+  nearbyMessage.textContent = '';
+
+  for (const user of users) {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'post-avatar';
+    setAvatarContent(avatar, user);
+
+    const body = document.createElement('div');
+    body.className = 'post-body';
+    const name = document.createElement('p');
+    name.className = 'post-meta';
+    const nameLink = document.createElement('a');
+    nameLink.className = 'author-link';
+    nameLink.href = `profile.html?id=${user.id}`;
+    nameLink.textContent = `${user.name}, ${BOROUGHS[user.borough]}`;
+    name.appendChild(nameLink);
+
+    const followBtn = document.createElement('button');
+    followBtn.type = 'button';
+    followBtn.className = 'link-btn';
+    followBtn.textContent = 'Добавить в подруги';
+    followBtn.addEventListener('click', async () => {
+      const res = await fetch(`${API_BASE_URL}/api/follow/${user.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        card.remove();
+        if (!nearbyList.children.length) {
+          nearbyMessage.textContent = 'Пока никого не нашлось в твоём районе.';
+        }
+        loadFriends();
+      }
+    });
+
+    body.appendChild(name);
+    if (user.bio) {
+      const content = document.createElement('p');
+      content.className = 'post-content';
+      content.textContent = user.bio;
+      body.appendChild(content);
+    }
+    body.appendChild(followBtn);
+    card.append(avatar, body);
+    nearbyList.appendChild(card);
+  }
+}
+
+async function loadNearby() {
+  if (!token) {
+    nearbyMessage.textContent = 'Войди в аккаунт на главной странице, чтобы увидеть людей рядом.';
+    return;
+  }
+  const res = await fetch(`${API_BASE_URL}/api/nearby`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return;
+  const users = await res.json();
+  renderNearby(users);
+}
+
 async function updateNavBadges() {
   const res = await fetch(`${API_BASE_URL}/api/unread`, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) return;
@@ -146,4 +218,5 @@ async function initBottomNav() {
 }
 
 loadFriends();
+loadNearby();
 initBottomNav();

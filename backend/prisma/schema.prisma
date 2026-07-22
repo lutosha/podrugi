@@ -16,7 +16,7 @@ model User {
   email         String    @unique
   passwordHash  String
   name          String
-  city          String?
+  borough       Borough
   avatar        String?
   bio           String?
   ageConfirmed  Boolean   @default(false)
@@ -79,6 +79,42 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum Borough {
+  BARKING_AND_DAGENHAM
+  BARNET
+  BEXLEY
+  BRENT
+  BROMLEY
+  CAMDEN
+  CITY_OF_LONDON
+  CROYDON
+  EALING
+  ENFIELD
+  GREENWICH
+  HACKNEY
+  HAMMERSMITH_AND_FULHAM
+  HARINGEY
+  HARROW
+  HAVERING
+  HILLINGDON
+  HOUNSLOW
+  ISLINGTON
+  KENSINGTON_AND_CHELSEA
+  KINGSTON_UPON_THAMES
+  LAMBETH
+  LEWISHAM
+  MERTON
+  NEWHAM
+  REDBRIDGE
+  RICHMOND_UPON_THAMES
+  SOUTHWARK
+  SUTTON
+  TOWER_HAMLETS
+  WALTHAM_FOREST
+  WANDSWORTH
+  WESTMINSTER
+}
+
 model Report {
   id             Int          @id @default(autoincrement())
   reason         String
@@ -107,7 +143,7 @@ model Post {
   id        Int        @id @default(autoincrement())
   type      PostType   @default(POST)
   content   String
-  area      String?
+  borough   Borough?
   eventDate DateTime?
   authorId  Int
   author    User       @relation(fields: [authorId], references: [id])

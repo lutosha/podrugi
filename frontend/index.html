@@ -31,7 +31,7 @@
         <button type="button" class="scope-btn" data-scope="following">Подруги</button>
       </div>
       <div id="areaFilter" class="area-chips">
-        <button type="button" class="area-chip active" data-area="">Все районы</button>
+        <button type="button" class="area-chip active" data-borough="">Все районы</button>
       </div>
       <div id="postsList"></div>
       <p id="feedHint" class="feed-hint hidden">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
@@ -46,6 +46,9 @@
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Пароль" required />
         <input type="text" id="name" placeholder="Имя" class="hidden" />
+        <select id="borough" class="hidden">
+          <option value="">Выбери район</option>
+        </select>
         <label id="ageLabel" class="age-label hidden">
           <input type="checkbox" id="ageConfirmed" />
           Мне есть 18 лет
@@ -67,7 +70,9 @@
           <button type="button" class="type-tab" data-type="EVENT">Событие</button>
         </div>
         <textarea id="postContent" placeholder="Что у тебя нового?" required maxlength="2000"></textarea>
-        <input type="text" id="postArea" placeholder="Район (необязательно)" maxlength="100" />
+        <select id="postBorough">
+          <option value="">Без района</option>
+        </select>
         <input type="datetime-local" id="postEventDate" class="hidden" />
         <button type="submit" class="btn btn-primary">Опубликовать</button>
         <p id="postMessage"></p>

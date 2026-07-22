@@ -5,6 +5,7 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
 const modal = document.getElementById('authModal');
 const modalTitle = document.getElementById('modalTitle');
 const nameInput = document.getElementById('name');
+const boroughInput = document.getElementById('borough');
 const ageLabel = document.getElementById('ageLabel');
 const ageConfirmedInput = document.getElementById('ageConfirmed');
 const authForm = document.getElementById('authForm');
@@ -14,7 +15,7 @@ const postModal = document.getElementById('postModal');
 const closePostModalBtn = document.getElementById('closePostModal');
 const postForm = document.getElementById('postForm');
 const postContentInput = document.getElementById('postContent');
-const postAreaInput = document.getElementById('postArea');
+const postBoroughInput = document.getElementById('postBorough');
 const postEventDateInput = document.getElementById('postEventDate');
 const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
@@ -28,10 +29,55 @@ const composeNavBtn = document.getElementById('composeNavBtn');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 
+const BOROUGHS = {
+  BARKING_AND_DAGENHAM: 'Barking and Dagenham',
+  BARNET: 'Barnet',
+  BEXLEY: 'Bexley',
+  BRENT: 'Brent',
+  BROMLEY: 'Bromley',
+  CAMDEN: 'Camden',
+  CITY_OF_LONDON: 'City of London',
+  CROYDON: 'Croydon',
+  EALING: 'Ealing',
+  ENFIELD: 'Enfield',
+  GREENWICH: 'Greenwich',
+  HACKNEY: 'Hackney',
+  HAMMERSMITH_AND_FULHAM: 'Hammersmith and Fulham',
+  HARINGEY: 'Haringey',
+  HARROW: 'Harrow',
+  HAVERING: 'Havering',
+  HILLINGDON: 'Hillingdon',
+  HOUNSLOW: 'Hounslow',
+  ISLINGTON: 'Islington',
+  KENSINGTON_AND_CHELSEA: 'Kensington and Chelsea',
+  KINGSTON_UPON_THAMES: 'Kingston upon Thames',
+  LAMBETH: 'Lambeth',
+  LEWISHAM: 'Lewisham',
+  MERTON: 'Merton',
+  NEWHAM: 'Newham',
+  REDBRIDGE: 'Redbridge',
+  RICHMOND_UPON_THAMES: 'Richmond upon Thames',
+  SOUTHWARK: 'Southwark',
+  SUTTON: 'Sutton',
+  TOWER_HAMLETS: 'Tower Hamlets',
+  WALTHAM_FOREST: 'Waltham Forest',
+  WANDSWORTH: 'Wandsworth',
+  WESTMINSTER: 'Westminster',
+};
+
+function populateBoroughSelect(select, { placeholder } = {}) {
+  for (const [value, label] of Object.entries(BOROUGHS).sort((a, b) => a[1].localeCompare(b[1]))) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    select.appendChild(option);
+  }
+}
+
 let mode = 'login';
 let selectedType = 'POST';
 let currentUser = null;
-let selectedArea = '';
+let selectedBorough = '';
 let feedScopeValue = 'all';
 
 function buildAvatarElement(user) {
@@ -61,6 +107,8 @@ function openModal(newMode) {
   mode = newMode;
   modalTitle.textContent = mode === 'login' ? 'Вход' : 'Регистрация';
   nameInput.classList.toggle('hidden', mode === 'login');
+  boroughInput.classList.toggle('hidden', mode === 'login');
+  boroughInput.required = mode !== 'login';
   ageLabel.classList.toggle('hidden', mode === 'login');
   authMessage.textContent = '';
   modal.classList.remove('hidden');
@@ -330,8 +378,8 @@ function renderPosts(posts) {
     authorLink.href = `profile.html?id=${post.author.id}`;
     authorLink.textContent = post.author.name;
     meta.appendChild(authorLink);
-    if (post.area) {
-      meta.appendChild(document.createTextNode(`, ${post.area}`));
+    if (post.borough) {
+      meta.appendChild(document.createTextNode(`, ${BOROUGHS[post.borough]}`));
     }
     if (post.type !== 'POST') {
       const badge = document.createElement('span');
@@ -369,7 +417,7 @@ async function fetchPosts() {
   const token = localStorage.getItem('token');
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const params = new URLSearchParams();
-  if (selectedArea) params.set('area', selectedArea);
+  if (selectedBorough) params.set('borough', selectedBorough);
   if (feedScopeValue === 'following') params.set('following', '1');
   const query = params.toString() ? `?${params.toString()}` : '';
 
@@ -380,17 +428,17 @@ async function fetchPosts() {
   renderPosts(posts);
 }
 
-async function fetchAreas() {
-  const res = await fetch(`${API_BASE_URL}/api/areas`);
+async function fetchBoroughs() {
+  const res = await fetch(`${API_BASE_URL}/api/boroughs`);
   if (!res.ok) return;
 
-  const areas = await res.json();
-  for (const area of areas) {
+  const boroughs = await res.json();
+  for (const borough of boroughs) {
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'area-chip';
-    chip.dataset.area = area;
-    chip.textContent = area;
+    chip.dataset.borough = borough;
+    chip.textContent = BOROUGHS[borough];
     areaFilter.appendChild(chip);
   }
 }
@@ -398,7 +446,7 @@ async function fetchAreas() {
 areaFilter.addEventListener('click', (e) => {
   const chip = e.target.closest('.area-chip');
   if (!chip) return;
-  selectedArea = chip.dataset.area;
+  selectedBorough = chip.dataset.borough || '';
   areaFilter.querySelectorAll('.area-chip').forEach((c) => {
     c.classList.toggle('active', c === chip);
   });
@@ -464,7 +512,7 @@ postForm.addEventListener('submit', async (e) => {
   const body = {
     type: selectedType,
     content: postContentInput.value,
-    area: postAreaInput.value,
+    borough: postBoroughInput.value,
   };
   if (selectedType === 'EVENT') {
     body.eventDate = postEventDateInput.value;
@@ -506,7 +554,7 @@ authForm.addEventListener('submit', async (e) => {
   const endpoint = mode === 'login' ? '/api/login' : '/api/register';
   const body = mode === 'login'
     ? { email, password }
-    : { email, password, name, ageConfirmed: ageConfirmedInput.checked };
+    : { email, password, name, borough: boroughInput.value, ageConfirmed: ageConfirmedInput.checked };
 
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -544,4 +592,6 @@ fetchProfile().then(() => {
     history.replaceState(null, '', 'index.html');
   }
 });
-fetchAreas();
+fetchBoroughs();
+populateBoroughSelect(boroughInput);
+populateBoroughSelect(postBoroughInput);

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, Borough } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
 const app = express();
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -40,6 +40,7 @@ const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(200),
   name: z.string().trim().min(1).max(100),
+  borough: z.nativeEnum(Borough),
   ageConfirmed: z.literal(true),
 });
 
@@ -51,7 +52,7 @@ const loginSchema = z.object({
 const postSchema = z.object({
   type: z.enum(['POST', 'ANNOUNCEMENT', 'EVENT']).default('POST'),
   content: z.string().trim().min(1).max(2000),
-  area: z.string().trim().max(100).optional().or(z.literal('')),
+  borough: z.nativeEnum(Borough).optional().or(z.literal('')),
   eventDate: z.string().optional(),
 }).refine(
   (data) => data.type !== 'EVENT' || (data.eventDate && !isNaN(Date.parse(data.eventDate))),
@@ -82,13 +83,13 @@ const messageSchema = z.object({
 
 const updateProfileSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  city: z.string().trim().max(100).optional().or(z.literal('')),
+  borough: z.nativeEnum(Borough),
   bio: z.string().trim().max(300).optional().or(z.literal('')),
   avatar: z.string().max(300000).optional().or(z.literal('')),
 });
 
 const postInclude = {
-  author: { select: { id: true, name: true, city: true, avatar: true } },
+  author: { select: { id: true, name: true, borough: true, avatar: true } },
   comments: {
     orderBy: { createdAt: 'asc' },
     include: { author: { select: { id: true, name: true } } },
@@ -154,7 +155,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/users', async (req, res) => {
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, city: true, createdAt: true },
+    select: { id: true, email: true, name: true, borough: true, createdAt: true },
   });
   res.json(users);
 });
@@ -162,16 +163,16 @@ app.get('/api/users', async (req, res) => {
 app.post('/api/register', authLimiter, async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: 'Проверь email, пароль (минимум 8 символов), имя и подтверждение возраста' });
+    return res.status(400).json({ error: 'Проверь email, пароль (минимум 8 символов), имя, район и подтверждение возраста' });
   }
-  const { email, password, name, ageConfirmed } = parsed.data;
+  const { email, password, name, borough, ageConfirmed } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: 'Email уже зарегистрирован' });
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { email, passwordHash, name, ageConfirmed },
+    data: { email, passwordHash, name, borough, ageConfirmed },
   });
   res.status(201).json({ id: user.id, email: user.email });
 });
@@ -196,7 +197,7 @@ app.post('/api/login', authLimiter, async (req, res) => {
 app.get('/api/profile', requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.userId },
-    select: { id: true, email: true, name: true, city: true, avatar: true, bio: true, role: true, createdAt: true },
+    select: { id: true, email: true, name: true, borough: true, avatar: true, bio: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -206,17 +207,17 @@ app.patch('/api/profile', requireAuth, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'Проверь имя, район, фото и текст «о себе»' });
   }
-  const { name, city, bio, avatar } = parsed.data;
+  const { name, borough, bio, avatar } = parsed.data;
 
   const user = await prisma.user.update({
     where: { id: req.user.userId },
     data: {
       name,
-      city: city || null,
+      borough,
       bio: bio || null,
       ...(avatar !== undefined ? { avatar: avatar || null } : {}),
     },
-    select: { id: true, email: true, name: true, city: true, avatar: true, bio: true, role: true, createdAt: true },
+    select: { id: true, email: true, name: true, borough: true, avatar: true, bio: true, role: true, createdAt: true },
   });
   res.json(user);
 });
@@ -227,7 +228,7 @@ app.get('/api/users/:id', async (req, res) => {
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { id: true, name: true, city: true, avatar: true, bio: true, createdAt: true },
+    select: { id: true, name: true, borough: true, avatar: true, bio: true, createdAt: true },
   });
   if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
   res.json(user);
@@ -238,13 +239,13 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'Проверь текст, тип и (для события) дату' });
   }
-  const { type, content, area, eventDate } = parsed.data;
+  const { type, content, borough, eventDate } = parsed.data;
 
   const post = await prisma.post.create({
     data: {
       type,
       content,
-      area: area || null,
+      borough: borough || null,
       eventDate: type === 'EVENT' ? new Date(eventDate) : null,
       authorId: req.user.userId,
     },
@@ -253,23 +254,23 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   res.status(201).json(post);
 });
 
-app.get('/api/areas', async (req, res) => {
+app.get('/api/boroughs', async (req, res) => {
   const posts = await prisma.post.findMany({
-    where: { area: { not: null } },
-    select: { area: true },
-    distinct: ['area'],
-    orderBy: { area: 'asc' },
+    where: { borough: { not: null } },
+    select: { borough: true },
+    distinct: ['borough'],
+    orderBy: { borough: 'asc' },
   });
-  res.json(posts.map((p) => p.area));
+  res.json(posts.map((p) => p.borough));
 });
 
 app.get('/api/posts', optionalAuth, async (req, res) => {
   const blockedIds = await getBlockedUserIds(req.user?.userId);
   const followingIds = await getFollowingIds(req.user?.userId);
-  const { area, authorId, following } = req.query;
+  const { borough, authorId, following } = req.query;
 
   const where = {};
-  if (area) where.area = String(area);
+  if (borough) where.borough = String(borough);
 
   if (authorId) {
     const authorIdNum = Number(authorId);
@@ -502,7 +503,7 @@ app.delete('/api/follow/:userId', requireAuth, async (req, res) => {
 app.get('/api/friends', requireAuth, async (req, res) => {
   const follows = await prisma.follow.findMany({
     where: { followerId: req.user.userId },
-    include: { followingUser: { select: { id: true, name: true, city: true, avatar: true } } },
+    include: { followingUser: { select: { id: true, name: true, borough: true, avatar: true } } },
     orderBy: { createdAt: 'desc' },
   });
   res.json(follows.map((f) => f.followingUser));

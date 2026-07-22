@@ -2,6 +2,42 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
   ? 'http://localhost:3000'
   : 'https://podrugi-production.up.railway.app';
 
+const BOROUGHS = {
+  BARKING_AND_DAGENHAM: 'Barking and Dagenham',
+  BARNET: 'Barnet',
+  BEXLEY: 'Bexley',
+  BRENT: 'Brent',
+  BROMLEY: 'Bromley',
+  CAMDEN: 'Camden',
+  CITY_OF_LONDON: 'City of London',
+  CROYDON: 'Croydon',
+  EALING: 'Ealing',
+  ENFIELD: 'Enfield',
+  GREENWICH: 'Greenwich',
+  HACKNEY: 'Hackney',
+  HAMMERSMITH_AND_FULHAM: 'Hammersmith and Fulham',
+  HARINGEY: 'Haringey',
+  HARROW: 'Harrow',
+  HAVERING: 'Havering',
+  HILLINGDON: 'Hillingdon',
+  HOUNSLOW: 'Hounslow',
+  ISLINGTON: 'Islington',
+  KENSINGTON_AND_CHELSEA: 'Kensington and Chelsea',
+  KINGSTON_UPON_THAMES: 'Kingston upon Thames',
+  LAMBETH: 'Lambeth',
+  LEWISHAM: 'Lewisham',
+  MERTON: 'Merton',
+  NEWHAM: 'Newham',
+  REDBRIDGE: 'Redbridge',
+  RICHMOND_UPON_THAMES: 'Richmond upon Thames',
+  SOUTHWARK: 'Southwark',
+  SUTTON: 'Sutton',
+  TOWER_HAMLETS: 'Tower Hamlets',
+  WALTHAM_FOREST: 'Waltham Forest',
+  WANDSWORTH: 'Wandsworth',
+  WESTMINSTER: 'Westminster',
+};
+
 const friendsMessage = document.getElementById('friendsMessage');
 const friendsList = document.getElementById('friendsList');
 const bottomNav = document.getElementById('bottomNav');
@@ -44,7 +80,7 @@ function renderFriends(friends) {
     const nameLink = document.createElement('a');
     nameLink.className = 'author-link';
     nameLink.href = `profile.html?id=${friend.id}`;
-    nameLink.textContent = friend.city ? `${friend.name}, ${friend.city}` : friend.name;
+    nameLink.textContent = `${friend.name}, ${BOROUGHS[friend.borough]}`;
     name.appendChild(nameLink);
     const messageLink = document.createElement('a');
     messageLink.className = 'link-btn';

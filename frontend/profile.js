@@ -5,6 +5,51 @@ const API_BASE_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
 const AVATAR_SIZE = 160;
 
+const BOROUGHS = {
+  BARKING_AND_DAGENHAM: 'Barking and Dagenham',
+  BARNET: 'Barnet',
+  BEXLEY: 'Bexley',
+  BRENT: 'Brent',
+  BROMLEY: 'Bromley',
+  CAMDEN: 'Camden',
+  CITY_OF_LONDON: 'City of London',
+  CROYDON: 'Croydon',
+  EALING: 'Ealing',
+  ENFIELD: 'Enfield',
+  GREENWICH: 'Greenwich',
+  HACKNEY: 'Hackney',
+  HAMMERSMITH_AND_FULHAM: 'Hammersmith and Fulham',
+  HARINGEY: 'Haringey',
+  HARROW: 'Harrow',
+  HAVERING: 'Havering',
+  HILLINGDON: 'Hillingdon',
+  HOUNSLOW: 'Hounslow',
+  ISLINGTON: 'Islington',
+  KENSINGTON_AND_CHELSEA: 'Kensington and Chelsea',
+  KINGSTON_UPON_THAMES: 'Kingston upon Thames',
+  LAMBETH: 'Lambeth',
+  LEWISHAM: 'Lewisham',
+  MERTON: 'Merton',
+  NEWHAM: 'Newham',
+  REDBRIDGE: 'Redbridge',
+  RICHMOND_UPON_THAMES: 'Richmond upon Thames',
+  SOUTHWARK: 'Southwark',
+  SUTTON: 'Sutton',
+  TOWER_HAMLETS: 'Tower Hamlets',
+  WALTHAM_FOREST: 'Waltham Forest',
+  WANDSWORTH: 'Wandsworth',
+  WESTMINSTER: 'Westminster',
+};
+
+function populateBoroughSelect(select) {
+  for (const [value, label] of Object.entries(BOROUGHS).sort((a, b) => a[1].localeCompare(b[1]))) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    select.appendChild(option);
+  }
+}
+
 const params = new URLSearchParams(location.search);
 const profileId = Number(params.get('id'));
 const token = localStorage.getItem('token');
@@ -13,7 +58,7 @@ const profileHeader = document.getElementById('profileHeader');
 const profileMessage = document.getElementById('profileMessage');
 const editProfileForm = document.getElementById('editProfileForm');
 const editNameInput = document.getElementById('editName');
-const editCityInput = document.getElementById('editCity');
+const editBoroughInput = document.getElementById('editBorough');
 const editBioInput = document.getElementById('editBio');
 const editAvatarInput = document.getElementById('editAvatar');
 const avatarPreview = document.getElementById('avatarPreview');
@@ -53,9 +98,9 @@ function renderProfileHeader(user) {
   const info = document.createElement('div');
   const h1 = document.createElement('h1');
   h1.textContent = user.name;
-  const cityP = document.createElement('p');
-  cityP.textContent = user.city || 'Район не указан';
-  info.append(h1, cityP);
+  const boroughP = document.createElement('p');
+  boroughP.textContent = BOROUGHS[user.borough];
+  info.append(h1, boroughP);
 
   if (user.bio) {
     const bioP = document.createElement('p');
@@ -71,7 +116,7 @@ function renderProfileHeader(user) {
 function buildOwnProfile(user) {
   renderProfileHeader(user);
   editNameInput.value = user.name;
-  editCityInput.value = user.city || '';
+  editBoroughInput.value = user.borough;
   editBioInput.value = user.bio || '';
   setAvatarContent(avatarPreview, user);
   editProfileForm.classList.remove('hidden');
@@ -322,7 +367,7 @@ async function loadProfile() {
 
 editProfileForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const body = { name: editNameInput.value, city: editCityInput.value, bio: editBioInput.value };
+  const body = { name: editNameInput.value, borough: editBoroughInput.value, bio: editBioInput.value };
   if (pendingAvatarData) body.avatar = pendingAvatarData;
 
   const res = await fetch(`${API_BASE_URL}/api/profile`, {
@@ -349,5 +394,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
+populateBoroughSelect(editBoroughInput);
 loadProfile();
 initBottomNav();

@@ -22,7 +22,9 @@
         <input type="file" id="editAvatar" accept="image/*" />
       </div>
       <input type="text" id="editName" placeholder="Имя" maxlength="100" required />
-      <input type="text" id="editCity" placeholder="Район (необязательно)" maxlength="100" />
+      <select id="editBorough" required>
+        <option value="" disabled>Выбери район</option>
+      </select>
       <textarea id="editBio" placeholder="О себе (необязательно)" maxlength="300"></textarea>
       <button type="submit" class="btn btn-primary">Сохранить</button>
     </form>

@@ -47,6 +47,19 @@ const FLAG_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 
 const HEART_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
 
+// иконки карточек — как в мокапе, inline SVG (тот же принцип, что FLAG_ICON_SVG)
+const HEART_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 3.2c2.3-.4 4.3.7 6 2.8 1.7-2.1 3.7-3.2 6-2.8 4 .8 5.5 4.8 4 8.5-2.5 4.7-10 9.3-10 9.3Z" stroke="currentColor" stroke-width="1.7"/></svg>';
+const COMMENT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-width="1.7"/></svg>';
+const ADD_FRIEND_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3 2.9-5 6-5s5.4 2 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const FRIEND_CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3 2.9-5 6-5s5.4 2 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15 11.5l2 2 3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const WRITE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-width="1.7"/></svg>';
+const PIN_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>';
+const CAL_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const RSVP_GOING_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const RSVP_MAYBE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.7"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">?</text></svg>';
+const ICS_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 13v5M9.5 15.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const SHARE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
 const BOROUGHS = {
   BARKING_AND_DAGENHAM: 'Barking and Dagenham',
   BARNET: 'Barnet',
@@ -237,7 +250,7 @@ function formatEventDate(isoString) {
 
 function buildCommentsSection(post) {
   const section = document.createElement('div');
-  section.className = 'post-comments';
+  section.className = 'post-comments hidden';
 
   for (const comment of post.comments) {
     const commentEl = document.createElement('p');
@@ -284,9 +297,9 @@ function buildCommentsSection(post) {
   return section;
 }
 
-function buildRsvpSection(post) {
-  const section = document.createElement('div');
-  section.className = 'post-rsvp';
+function buildRsvpRow(post) {
+  const row = document.createElement('div');
+  row.className = 'rsvp-row';
 
   const goingCount = post.rsvps.filter((r) => r.status === 'GOING').length;
   const maybeCount = post.rsvps.filter((r) => r.status === 'MAYBE').length;
@@ -296,22 +309,21 @@ function buildRsvpSection(post) {
   const statuses = [
     {
       status: 'GOING',
-      label: post.maxParticipants != null ? `Иду (${goingCount}/${post.maxParticipants})` : `Иду (${goingCount})`,
-      icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      title: 'Иду',
+      icon: RSVP_GOING_SVG,
+      count: post.maxParticipants != null ? `${goingCount}/${post.maxParticipants}` : `${goingCount}`,
     },
-    {
-      status: 'MAYBE',
-      label: `Возможно (${maybeCount})`,
-      icon: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.7"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">?</text></svg>',
-    },
+    { status: 'MAYBE', title: 'Возможно', icon: RSVP_MAYBE_SVG, count: `${maybeCount}` },
   ];
 
-  for (const { status, label, icon } of statuses) {
+  for (const { status, title, icon, count } of statuses) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'rsvp-btn';
+    button.title = title;
+    button.setAttribute('aria-label', title);
     button.classList.toggle('active', myRsvp?.status === status);
-    button.innerHTML = `${icon}<span>${label}</span>`;
+    button.innerHTML = `${icon}<span>${count}</span>`;
     button.disabled = !currentUser || (status === 'GOING' && isFull && myRsvp?.status !== 'GOING');
 
     button.addEventListener('click', async () => {
@@ -329,22 +341,33 @@ function buildRsvpSection(post) {
       }
     });
 
-    section.appendChild(button);
+    row.appendChild(button);
   }
 
-  return section;
+  const icsLink = document.createElement('a');
+  icsLink.className = 'ics-link';
+  icsLink.title = 'Добавить в календарь';
+  icsLink.setAttribute('aria-label', 'Добавить в календарь');
+  icsLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
+  icsLink.innerHTML = ICS_SVG;
+  row.appendChild(icsLink);
+
+  return row;
 }
 
-function buildReactionButton(post) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'reaction-btn';
-  const myReaction = currentUser ? post.reactions.some((r) => r.userId === currentUser.id) : false;
-  button.classList.toggle('active', myReaction);
-  button.disabled = !currentUser;
-  button.innerHTML = `${HEART_ICON_SVG}<span>${post.reactions.length}</span>`;
+// ряд действий под постом/событием: лайк, комментарии (тумблер), иконки «в подруги»/«написать»
+function buildActionRow(post, commentsSection) {
+  const row = document.createElement('div');
+  row.className = 'action-row';
 
-  button.addEventListener('click', async () => {
+  const heartBtn = document.createElement('button');
+  heartBtn.type = 'button';
+  heartBtn.className = 'heart-btn';
+  const myReaction = currentUser ? post.reactions.some((r) => r.userId === currentUser.id) : false;
+  heartBtn.classList.toggle('liked', myReaction);
+  heartBtn.disabled = !currentUser;
+  heartBtn.innerHTML = `${HEART_SVG}<span>${post.reactions.length}</span>`;
+  heartBtn.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
     const method = myReaction ? 'DELETE' : 'POST';
     const res = await fetch(`${API_BASE_URL}/api/posts/${post.id}/react`, {
@@ -353,14 +376,55 @@ function buildReactionButton(post) {
     });
     if (res.ok || res.status === 204) fetchPosts();
   });
+  row.appendChild(heartBtn);
 
-  return button;
+  const commentBtn = document.createElement('button');
+  commentBtn.type = 'button';
+  commentBtn.className = 'comment-btn';
+  commentBtn.title = 'Комментарии';
+  commentBtn.innerHTML = `${COMMENT_SVG}<span>${post.comments.length}</span>`;
+  commentBtn.addEventListener('click', () => {
+    commentsSection.classList.toggle('hidden');
+  });
+  row.appendChild(commentBtn);
+
+  if (currentUser && currentUser.id !== post.author.id) {
+    const iconActions = document.createElement('div');
+    iconActions.className = 'icon-actions';
+
+    const followBtn = document.createElement('button');
+    followBtn.type = 'button';
+    followBtn.className = 'icon-action-btn';
+    followBtn.classList.toggle('on', post.authorIsFollowed);
+    followBtn.title = post.authorIsFollowed ? 'В подругах' : 'Добавить в подруги';
+    followBtn.setAttribute('aria-label', followBtn.title);
+    followBtn.innerHTML = post.authorIsFollowed ? FRIEND_CHECK_SVG : ADD_FRIEND_SVG;
+    followBtn.addEventListener('click', async () => {
+      const token = localStorage.getItem('token');
+      const method = post.authorIsFollowed ? 'DELETE' : 'POST';
+      const res = await fetch(`${API_BASE_URL}/api/follow/${post.author.id}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok || res.status === 204) fetchPosts();
+    });
+
+    const writeLink = document.createElement('a');
+    writeLink.className = 'icon-action-btn';
+    writeLink.title = 'Написать';
+    writeLink.setAttribute('aria-label', 'Написать');
+    writeLink.href = `messages.html?to=${post.author.id}&name=${encodeURIComponent(post.author.name)}`;
+    writeLink.innerHTML = WRITE_SVG;
+
+    iconActions.append(followBtn, writeLink);
+    row.appendChild(iconActions);
+  }
+
+  return row;
 }
 
-function buildActionsSection(post) {
-  const section = document.createElement('div');
-  section.className = 'post-actions';
-
+// флажок «пожаловаться/заблокировать» в углу карточки (в мокапе этого нет — это наша функция безопасности)
+function buildFlagCorner(post) {
   const flagWrap = document.createElement('div');
   flagWrap.className = 'flag-wrap flag-corner';
 
@@ -418,9 +482,6 @@ function buildActionsSection(post) {
     }
   });
 
-  flagWrap.append(flagBtn, flagMenu);
-  section.appendChild(reportForm);
-
   if (currentUser && currentUser.id !== post.author.id) {
     const blockMenuBtn = document.createElement('button');
     blockMenuBtn.type = 'button';
@@ -436,30 +497,10 @@ function buildActionsSection(post) {
       if (res.ok) fetchPosts();
     });
     flagMenu.appendChild(blockMenuBtn);
-
-    const followBtn = document.createElement('button');
-    followBtn.type = 'button';
-    followBtn.className = 'link-btn';
-    followBtn.textContent = post.authorIsFollowed ? 'В подругах ✓' : 'Добавить в подруги';
-    followBtn.addEventListener('click', async () => {
-      const token = localStorage.getItem('token');
-      const method = post.authorIsFollowed ? 'DELETE' : 'POST';
-      const res = await fetch(`${API_BASE_URL}/api/follow/${post.author.id}`, {
-        method,
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok || res.status === 204) fetchPosts();
-    });
-    section.appendChild(followBtn);
-
-    const messageLink = document.createElement('a');
-    messageLink.className = 'link-btn';
-    messageLink.textContent = 'Написать';
-    messageLink.href = `messages.html?to=${post.author.id}&name=${encodeURIComponent(post.author.name)}`;
-    section.appendChild(messageLink);
   }
 
-  return { section, flagWrap };
+  flagWrap.append(flagBtn, flagMenu);
+  return { flagWrap, reportForm };
 }
 
 function renderPosts(posts) {
@@ -473,41 +514,54 @@ function renderPosts(posts) {
   }
 
   for (const post of posts) {
-    const card = document.createElement('div');
-    card.className = 'post-card';
+    const card = document.createElement('article');
+    card.className = 'card';
+
+    const top = document.createElement('div');
+    top.className = 'card-top';
 
     const avatar = buildAvatarElement(post.author);
 
     const body = document.createElement('div');
-    body.className = 'post-body';
+    body.className = 'card-body';
 
-    const meta = document.createElement('p');
-    meta.className = 'post-meta';
+    const authorRow = document.createElement('div');
+    authorRow.className = 'card-author-row';
     const authorLink = document.createElement('a');
-    authorLink.className = 'author-link';
+    authorLink.className = 'author-name';
     authorLink.href = `profile.html?id=${post.author.id}`;
     authorLink.textContent = post.author.name;
-    meta.appendChild(authorLink);
+    authorRow.appendChild(authorLink);
+    body.appendChild(authorRow);
+
     if (post.borough) {
-      meta.appendChild(document.createTextNode(`, ${BOROUGHS[post.borough]}`));
+      const metaRow = document.createElement('div');
+      metaRow.className = 'event-meta-row';
+      metaRow.innerHTML = PIN_SVG;
+      const boroughSpan = document.createElement('span');
+      boroughSpan.textContent = BOROUGHS[post.borough];
+      metaRow.appendChild(boroughSpan);
+      body.appendChild(metaRow);
     }
 
     const content = document.createElement('p');
-    content.className = 'post-content';
+    content.className = 'card-text';
     content.textContent = post.content;
+    body.appendChild(content);
 
-    body.append(meta, content);
-    body.appendChild(buildReactionButton(post));
+    const comments = buildCommentsSection(post);
+    body.appendChild(buildActionRow(post, comments));
+    body.appendChild(comments);
+
+    top.append(avatar, body);
+    card.appendChild(top);
 
     if (currentUser) {
-      const { section, flagWrap } = buildActionsSection(post);
+      const { flagWrap, reportForm } = buildFlagCorner(post);
       card.appendChild(flagWrap);
-      body.appendChild(section);
+      body.appendChild(reportForm);
     }
 
-    body.appendChild(buildCommentsSection(post));
-
-    card.append(avatar, body);
     postsList.appendChild(card);
   }
 }
@@ -589,9 +643,7 @@ function renderEventCards(posts) {
     shareBtn.type = 'button';
     shareBtn.className = 'discover-pill discover-share';
     shareBtn.setAttribute('aria-label', 'Поделиться');
-    const shareIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
-    const checkIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    shareBtn.innerHTML = shareIcon;
+    shareBtn.innerHTML = SHARE_SVG;
     shareBtn.addEventListener('click', async () => {
       const text = `${firstSentence(post.content)} — ${location.origin}${location.pathname}`;
       try {
@@ -599,8 +651,8 @@ function renderEventCards(posts) {
       } catch {
         // clipboard недоступен (например, без HTTPS) — молча игнорируем
       }
-      shareBtn.innerHTML = checkIcon;
-      setTimeout(() => { shareBtn.innerHTML = shareIcon; }, 1500);
+      shareBtn.innerHTML = RSVP_GOING_SVG;
+      setTimeout(() => { shareBtn.innerHTML = SHARE_SVG; }, 1500);
     });
     photo.appendChild(shareBtn);
 
@@ -627,23 +679,19 @@ function renderEventCards(posts) {
     }
 
     const headline = document.createElement('div');
-    headline.className = 'discover-headline';
+    headline.className = 'card-headline';
     headline.textContent = firstSentence(post.content);
     bodyEl.appendChild(headline);
 
-    const eventDate = document.createElement('p');
-    eventDate.className = 'post-event-date';
-    eventDate.textContent = formatEventDate(post.eventDate);
+    const eventDate = document.createElement('div');
+    eventDate.className = 'event-meta-row';
+    eventDate.innerHTML = CAL_SVG;
+    const dateSpan = document.createElement('span');
+    dateSpan.textContent = formatEventDate(post.eventDate);
+    eventDate.appendChild(dateSpan);
     bodyEl.appendChild(eventDate);
 
-    bodyEl.appendChild(buildRsvpSection(post));
-
-    const icsLink = document.createElement('a');
-    icsLink.className = 'ics-link';
-    icsLink.title = 'Добавить в календарь';
-    icsLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
-    icsLink.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
-    bodyEl.appendChild(icsLink);
+    bodyEl.appendChild(buildRsvpRow(post));
 
     const footer = document.createElement('div');
     footer.className = 'discover-footer';
@@ -667,16 +715,17 @@ function renderEventCards(posts) {
       footer.appendChild(goingWrap);
     }
 
-    footer.appendChild(buildReactionButton(post));
+    const comments = buildCommentsSection(post);
+    footer.appendChild(buildActionRow(post, comments));
 
     if (currentUser) {
-      const { section, flagWrap } = buildActionsSection(post);
+      const { flagWrap, reportForm } = buildFlagCorner(post);
       card.appendChild(flagWrap);
-      footer.appendChild(section);
+      bodyEl.appendChild(reportForm);
     }
 
     bodyEl.appendChild(footer);
-    bodyEl.appendChild(buildCommentsSection(post));
+    bodyEl.appendChild(comments);
 
     card.append(photo, bodyEl);
     eventsRow.appendChild(card);

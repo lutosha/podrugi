@@ -453,7 +453,7 @@ nav {
 }
 
 .discover-share {
-  right: 48px;
+  right: 10px;
   width: 30px;
   height: 30px;
   padding: 0;
@@ -496,12 +496,165 @@ nav {
   margin-bottom: 4px;
 }
 
-.discover-headline {
+.card-headline {
   font-size: 14.5px;
   font-weight: 800;
   color: var(--ink);
   line-height: 1.28;
   margin: 4px 0 6px;
+}
+
+/* обычная карточка поста — как .card в мокапе */
+.card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+}
+
+.card-top {
+  display: flex;
+  gap: 11px;
+}
+
+.card-top .post-avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 1rem;
+}
+
+.card-body {
+  flex: 1;
+  min-width: 0;
+  padding-right: 22px;
+}
+
+.card-author-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
+.author-name,
+.author-name:link,
+.author-name:visited {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.author-name:hover {
+  text-decoration: underline;
+}
+
+.card-text {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 4px 0 10px;
+  color: var(--ink);
+}
+
+/* строка мета (район/дата) с иконкой */
+.event-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.event-meta-row svg {
+  flex-shrink: 0;
+}
+
+/* ряд RSVP: иконки + число + кнопка календаря в одну строку */
+.rsvp-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* ряд действий: лайк, комментарии, иконки «в подруги»/«написать» */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.heart-btn,
+.comment-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+
+.heart-btn svg,
+.comment-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.heart-btn.liked {
+  color: var(--accent);
+}
+
+.heart-btn.liked svg {
+  fill: var(--accent);
+  stroke: var(--accent);
+  transform: scale(1.08);
+}
+
+.heart-btn:disabled {
+  cursor: default;
+}
+
+.icon-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.icon-action-btn,
+.icon-action-btn:link,
+.icon-action-btn:visited {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--heading);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.icon-action-btn:hover {
+  background: color-mix(in srgb, var(--accent-secondary) 22%, var(--card));
+}
+
+.icon-action-btn.on {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .discover-footer {
@@ -567,6 +720,7 @@ a.post-card:visited {
 }
 
 .post-avatar {
+  position: relative;
   flex-shrink: 0;
   width: 42px;
   height: 42px;
@@ -579,6 +733,18 @@ a.post-card:visited {
   font-weight: 600;
   font-size: 0.95rem;
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.post-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.5), transparent 55%),
+    radial-gradient(circle at 75% 90%, rgba(0, 0, 0, 0.18), transparent 60%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
 }
 
 .post-avatar img {
@@ -631,20 +797,6 @@ a.post-card:visited {
   margin: 4px 0 10px;
 }
 
-.post-event-date {
-  font-size: 0.85rem;
-  color: var(--accent-dark);
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.post-rsvp {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
 .rsvp-btn {
   display: inline-flex;
   align-items: center;
@@ -694,37 +846,6 @@ a.post-card:visited {
 
 .ics-link:hover {
   background: color-mix(in srgb, var(--accent-secondary) 22%, var(--card));
-}
-
-.reaction-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0.4rem 0.7rem;
-  min-height: 40px;
-  margin-bottom: 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--ink-secondary);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.reaction-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.reaction-btn.active {
-  color: var(--accent-dark);
-  border-color: var(--accent);
-}
-
-.reaction-btn.active svg {
-  fill: currentColor;
 }
 
 .post-comments {
@@ -848,6 +969,11 @@ a.post-card:visited {
 .flag-corner .flag-menu {
   left: auto;
   right: 0;
+}
+
+/* на карточке события справа сверху уже есть «поделиться» (right:10px) — флажок ставим левее */
+.discover-card .flag-corner {
+  right: 48px;
 }
 
 /* поверх фото-обложки события флажку нужен видимый фон */

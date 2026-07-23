@@ -37,8 +37,11 @@ const bottomProfileLink = document.getElementById('bottomProfileLink');
 const bottomProfileAvatar = document.getElementById('bottomProfileAvatar');
 const composeNavBtn = document.getElementById('composeNavBtn');
 const notificationsLink = document.getElementById('notificationsLink');
+const heroSection = document.getElementById('heroSection');
+const authTabLogin = document.getElementById('authTabLogin');
+const authTabRegister = document.getElementById('authTabRegister');
 
-const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Объявление', EVENT: 'Событие' };
+const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Ищу компанию', EVENT: 'Событие' };
 
 const FLAG_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
 
@@ -134,7 +137,8 @@ typeTabs.forEach((tab) => {
 
 function openModal(newMode) {
   mode = newMode;
-  modalTitle.textContent = mode === 'login' ? 'Вход' : 'Регистрация';
+  authTabLogin.classList.toggle('active', mode === 'login');
+  authTabRegister.classList.toggle('active', mode === 'register');
   nameInput.classList.toggle('hidden', mode === 'login');
   boroughInput.classList.toggle('hidden', mode === 'login');
   boroughInput.required = mode !== 'login';
@@ -142,6 +146,9 @@ function openModal(newMode) {
   authMessage.textContent = '';
   modal.classList.remove('hidden');
 }
+
+authTabLogin.addEventListener('click', () => openModal('login'));
+authTabRegister.addEventListener('click', () => openModal('register'));
 
 function closeModal() {
   modal.classList.add('hidden');
@@ -172,7 +179,7 @@ function showLoggedIn(user) {
   currentUser = user;
   guestNav.classList.add('hidden');
   bottomNav.classList.remove('hidden');
-  document.body.classList.add('has-bottom-nav');
+  heroSection?.classList.add('hidden');
   feedHint.classList.add('hidden');
   feedScope.classList.remove('hidden');
   notificationsLink.classList.remove('hidden');
@@ -193,7 +200,7 @@ function showLoggedOut() {
   currentUser = null;
   guestNav.classList.remove('hidden');
   bottomNav.classList.add('hidden');
-  document.body.classList.remove('has-bottom-nav');
+  heroSection?.classList.remove('hidden');
   feedHint.classList.remove('hidden');
   feedScope.classList.add('hidden');
   feedScopeValue = 'all';
@@ -269,16 +276,24 @@ function buildRsvpSection(post) {
   const isFull = post.maxParticipants != null && goingCount >= post.maxParticipants;
 
   const statuses = [
-    { status: 'GOING', label: post.maxParticipants != null ? `Иду (${goingCount}/${post.maxParticipants})` : `Иду (${goingCount})` },
-    { status: 'MAYBE', label: `Возможно (${maybeCount})` },
+    {
+      status: 'GOING',
+      label: post.maxParticipants != null ? `Иду (${goingCount}/${post.maxParticipants})` : `Иду (${goingCount})`,
+      icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    },
+    {
+      status: 'MAYBE',
+      label: `Возможно (${maybeCount})`,
+      icon: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.7"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">?</text></svg>',
+    },
   ];
 
-  for (const { status, label } of statuses) {
+  for (const { status, label, icon } of statuses) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'rsvp-btn';
     button.classList.toggle('active', myRsvp?.status === status);
-    button.textContent = label;
+    button.innerHTML = `${icon}<span>${label}</span>`;
     button.disabled = !currentUser || (status === 'GOING' && isFull && myRsvp?.status !== 'GOING');
 
     button.addEventListener('click', async () => {
@@ -854,11 +869,8 @@ authForm.addEventListener('submit', async (e) => {
     }
 
     if (mode === 'register') {
+      openModal('login');
       authMessage.textContent = 'Готово! Теперь войди со своим email и паролем.';
-      mode = 'login';
-      modalTitle.textContent = 'Вход';
-      nameInput.classList.add('hidden');
-      ageLabel.classList.add('hidden');
       return;
     }
 

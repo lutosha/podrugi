@@ -108,6 +108,21 @@ const COVER_GRAD = [
   'radial-gradient(120% 140% at 20% 100%, rgba(163,177,138,.85), transparent 55%), radial-gradient(110% 130% at 100% 0%, rgba(229,152,155,.65), transparent 55%), linear-gradient(160deg,#2F4A44,#17241F)',
 ];
 
+const AVATAR_GRAD = [
+  'linear-gradient(155deg,#F0B8BA 0%,#C4636B 45%,#5C2E33 100%)',
+  'linear-gradient(155deg,#C9D4B4 0%,#7E9169 45%,#33422A 100%)',
+  'linear-gradient(155deg,#8FA5C7 0%,#4C6E8F 45%,#22344A 100%)',
+  'linear-gradient(155deg,#E8C9A0 0%,#B9834A 45%,#5B3A1C 100%)',
+  'linear-gradient(155deg,#D9B8DD 0%,#8E5F97 45%,#402B47 100%)',
+  'linear-gradient(155deg,#B7C9C2 0%,#5C8A79 45%,#28433A 100%)',
+];
+
+function avatarGradient(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % AVATAR_GRAD.length;
+  return AVATAR_GRAD[Math.abs(hash) % AVATAR_GRAD.length];
+}
+
 function buildAvatarElement(user) {
   const el = document.createElement('div');
   el.className = 'post-avatar';
@@ -117,6 +132,7 @@ function buildAvatarElement(user) {
     img.alt = '';
     el.appendChild(img);
   } else {
+    el.style.background = avatarGradient(user.name);
     el.textContent = user.name.charAt(0).toUpperCase();
   }
   return el;
@@ -185,12 +201,14 @@ function showLoggedIn(user) {
   notificationsLink.classList.remove('hidden');
   bottomProfileLink.href = `profile.html?id=${user.id}`;
   bottomProfileAvatar.innerHTML = '';
+  bottomProfileAvatar.style.background = '';
   if (user.avatar) {
     const img = document.createElement('img');
     img.src = user.avatar;
     img.alt = '';
     bottomProfileAvatar.appendChild(img);
   } else {
+    bottomProfileAvatar.style.background = avatarGradient(user.name);
     bottomProfileAvatar.textContent = user.name.charAt(0).toUpperCase();
   }
   updateNavBadges();
@@ -566,6 +584,25 @@ function renderEventCards(posts) {
     initiator.appendChild(buildAvatarElement(post.author));
     initiator.appendChild(document.createTextNode(post.author.name));
     photo.appendChild(initiator);
+
+    const shareBtn = document.createElement('button');
+    shareBtn.type = 'button';
+    shareBtn.className = 'discover-pill discover-share';
+    shareBtn.setAttribute('aria-label', 'Поделиться');
+    const shareIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+    const checkIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    shareBtn.innerHTML = shareIcon;
+    shareBtn.addEventListener('click', async () => {
+      const text = `${firstSentence(post.content)} — ${location.origin}${location.pathname}`;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // clipboard недоступен (например, без HTTPS) — молча игнорируем
+      }
+      shareBtn.innerHTML = checkIcon;
+      setTimeout(() => { shareBtn.innerHTML = shareIcon; }, 1500);
+    });
+    photo.appendChild(shareBtn);
 
     if (post.tags && post.tags.length) {
       const tagsWrap = document.createElement('div');

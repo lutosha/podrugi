@@ -76,14 +76,31 @@ let currentUserRole = null;
 let isFollowing = false;
 let pendingAvatarData = null;
 
+const AVATAR_GRAD = [
+  'linear-gradient(155deg,#F0B8BA 0%,#C4636B 45%,#5C2E33 100%)',
+  'linear-gradient(155deg,#C9D4B4 0%,#7E9169 45%,#33422A 100%)',
+  'linear-gradient(155deg,#8FA5C7 0%,#4C6E8F 45%,#22344A 100%)',
+  'linear-gradient(155deg,#E8C9A0 0%,#B9834A 45%,#5B3A1C 100%)',
+  'linear-gradient(155deg,#D9B8DD 0%,#8E5F97 45%,#402B47 100%)',
+  'linear-gradient(155deg,#B7C9C2 0%,#5C8A79 45%,#28433A 100%)',
+];
+
+function avatarGradient(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % AVATAR_GRAD.length;
+  return AVATAR_GRAD[Math.abs(hash) % AVATAR_GRAD.length];
+}
+
 function setAvatarContent(el, user) {
   el.innerHTML = '';
+  el.style.background = '';
   if (user.avatar) {
     const img = document.createElement('img');
     img.src = user.avatar;
     img.alt = '';
     el.appendChild(img);
   } else {
+    el.style.background = avatarGradient(user.name);
     el.textContent = user.name.charAt(0).toUpperCase();
   }
 }

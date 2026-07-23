@@ -18,11 +18,19 @@ const postContentInput = document.getElementById('postContent');
 const postBoroughInput = document.getElementById('postBorough');
 const postEventDateInput = document.getElementById('postEventDate');
 const postMaxParticipantsInput = document.getElementById('postMaxParticipants');
+const postTagsInput = document.getElementById('postTags');
 const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
+const companyRow = document.getElementById('companyRow');
+const companyLoadMore = document.getElementById('companyLoadMore');
+const eventsRow = document.getElementById('eventsRow');
+const eventsLoadMore = document.getElementById('eventsLoadMore');
+const createEventBtn = document.getElementById('createEventBtn');
 const feedHint = document.getElementById('feedHint');
-const areaFilter = document.getElementById('areaFilter');
-const typeFilter = document.getElementById('typeFilter');
+const districtSelect = document.getElementById('districtSelect');
+const districtTrigger = document.getElementById('districtTrigger');
+const districtMenu = document.getElementById('districtMenu');
+const districtLabel = document.getElementById('districtLabel');
 const feedScope = document.getElementById('feedScope');
 const bottomNav = document.getElementById('bottomNav');
 const bottomProfileLink = document.getElementById('bottomProfileLink');
@@ -85,8 +93,17 @@ let mode = 'login';
 let selectedType = 'POST';
 let currentUser = null;
 let selectedBorough = '';
-let selectedFeedType = '';
 let feedScopeValue = 'all';
+let latestPosts = [];
+let companyVisible = 3;
+let eventsVisible = 3;
+let districtMenuOpen = false;
+
+const COVER_GRAD = [
+  'radial-gradient(120% 140% at 12% 0%, rgba(163,177,138,.9), transparent 55%), radial-gradient(110% 130% at 100% 100%, rgba(229,152,155,.65), transparent 55%), linear-gradient(160deg,#3F5A4C,#20302A)',
+  'radial-gradient(120% 140% at 90% 0%, rgba(229,152,155,.85), transparent 55%), radial-gradient(110% 130% at 0% 100%, rgba(163,177,138,.7), transparent 55%), linear-gradient(160deg,#4A3B4E,#241B26)',
+  'radial-gradient(120% 140% at 20% 100%, rgba(163,177,138,.85), transparent 55%), radial-gradient(110% 130% at 100% 0%, rgba(229,152,155,.65), transparent 55%), linear-gradient(160deg,#2F4A44,#17241F)',
+];
 
 function buildAvatarElement(user) {
   const el = document.createElement('div');
@@ -102,14 +119,17 @@ function buildAvatarElement(user) {
   return el;
 }
 
+function setPostType(type) {
+  selectedType = type;
+  typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === type));
+  postEventDateInput.classList.toggle('hidden', selectedType !== 'EVENT');
+  postEventDateInput.required = selectedType === 'EVENT';
+  postMaxParticipantsInput.classList.toggle('hidden', selectedType !== 'EVENT');
+  postTagsInput.classList.toggle('hidden', selectedType !== 'EVENT');
+}
+
 typeTabs.forEach((tab) => {
-  tab.addEventListener('click', () => {
-    selectedType = tab.dataset.type;
-    typeTabs.forEach((t) => t.classList.toggle('active', t === tab));
-    postEventDateInput.classList.toggle('hidden', selectedType !== 'EVENT');
-    postEventDateInput.required = selectedType === 'EVENT';
-    postMaxParticipantsInput.classList.toggle('hidden', selectedType !== 'EVENT');
-  });
+  tab.addEventListener('click', () => setPostType(tab.dataset.type));
 });
 
 function openModal(newMode) {
@@ -128,7 +148,8 @@ function closeModal() {
   authForm.reset();
 }
 
-function openPostModal() {
+function openPostModal(type) {
+  if (type) setPostType(type);
   postModal.classList.remove('hidden');
 }
 
@@ -410,6 +431,14 @@ function buildActionsSection(post) {
 
 function renderPosts(posts) {
   postsList.innerHTML = '';
+  if (posts.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'Пока нет постов в этом районе.';
+    postsList.appendChild(empty);
+    return;
+  }
+
   for (const post of posts) {
     const card = document.createElement('div');
     card.className = 'post-card';
@@ -429,33 +458,12 @@ function renderPosts(posts) {
     if (post.borough) {
       meta.appendChild(document.createTextNode(`, ${BOROUGHS[post.borough]}`));
     }
-    if (post.type !== 'POST') {
-      const badge = document.createElement('span');
-      badge.className = 'post-type-badge';
-      badge.textContent = TYPE_LABELS[post.type];
-      meta.appendChild(badge);
-    }
 
     const content = document.createElement('p');
     content.className = 'post-content';
     content.textContent = post.content;
 
     body.append(meta, content);
-
-    if (post.type === 'EVENT') {
-      const eventDate = document.createElement('p');
-      eventDate.className = 'post-event-date';
-      eventDate.textContent = formatEventDate(post.eventDate);
-      body.appendChild(eventDate);
-      body.appendChild(buildRsvpSection(post));
-
-      const icsLink = document.createElement('a');
-      icsLink.className = 'link-btn';
-      icsLink.textContent = 'Добавить в календарь';
-      icsLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
-      body.appendChild(icsLink);
-    }
-
     body.appendChild(buildReactionButton(post));
 
     if (currentUser) {
@@ -471,12 +479,172 @@ function renderPosts(posts) {
   }
 }
 
+function renderCompanyGrid(posts) {
+  companyRow.innerHTML = '';
+  const visible = posts.slice(0, companyVisible);
+
+  if (visible.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'Пока никого нет рядом в этом районе.';
+    companyRow.appendChild(empty);
+    companyLoadMore.classList.add('hidden');
+    return;
+  }
+
+  for (const post of visible) {
+    const card = document.createElement('a');
+    card.className = 'human-card';
+    card.href = `profile.html?id=${post.author.id}`;
+
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'human-avatar-wrap';
+    avatarWrap.appendChild(buildAvatarElement(post.author));
+    const dot = document.createElement('span');
+    dot.className = 'human-status-dot';
+    avatarWrap.appendChild(dot);
+
+    const status = document.createElement('div');
+    status.className = 'human-status';
+    status.textContent = post.content;
+
+    const meta = document.createElement('div');
+    meta.className = 'human-meta';
+    meta.textContent = post.borough ? BOROUGHS[post.borough] : post.author.name;
+
+    card.append(avatarWrap, status, meta);
+    companyRow.appendChild(card);
+  }
+
+  companyLoadMore.classList.toggle('hidden', posts.length <= companyVisible);
+}
+
+function firstSentence(text) {
+  const match = text.match(/^.*?[.!?](?=\s|$)/);
+  return match ? match[0] : text;
+}
+
+function renderEventCards(posts) {
+  eventsRow.innerHTML = '';
+  const visible = posts.slice(0, eventsVisible);
+
+  if (visible.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'Пока нет мероприятий в этом районе.';
+    eventsRow.appendChild(empty);
+    eventsLoadMore.classList.add('hidden');
+    return;
+  }
+
+  for (const post of visible) {
+    const card = document.createElement('div');
+    card.className = 'discover-card';
+
+    const photo = document.createElement('div');
+    photo.className = 'discover-photo';
+    photo.style.background = COVER_GRAD[post.id % COVER_GRAD.length];
+
+    const initiator = document.createElement('a');
+    initiator.className = 'discover-pill discover-initiator';
+    initiator.href = `profile.html?id=${post.author.id}`;
+    initiator.appendChild(buildAvatarElement(post.author));
+    initiator.appendChild(document.createTextNode(post.author.name));
+    photo.appendChild(initiator);
+
+    if (post.tags && post.tags.length) {
+      const tagsWrap = document.createElement('div');
+      tagsWrap.className = 'discover-tags';
+      for (const tag of post.tags) {
+        const tagEl = document.createElement('span');
+        tagEl.className = 'discover-tag';
+        tagEl.textContent = tag;
+        tagsWrap.appendChild(tagEl);
+      }
+      photo.appendChild(tagsWrap);
+    }
+
+    const bodyEl = document.createElement('div');
+    bodyEl.className = 'discover-body';
+
+    if (post.borough) {
+      const distance = document.createElement('div');
+      distance.className = 'discover-distance';
+      distance.textContent = BOROUGHS[post.borough];
+      bodyEl.appendChild(distance);
+    }
+
+    const headline = document.createElement('div');
+    headline.className = 'discover-headline';
+    headline.textContent = firstSentence(post.content);
+    bodyEl.appendChild(headline);
+
+    const eventDate = document.createElement('p');
+    eventDate.className = 'post-event-date';
+    eventDate.textContent = formatEventDate(post.eventDate);
+    bodyEl.appendChild(eventDate);
+
+    bodyEl.appendChild(buildRsvpSection(post));
+
+    const icsLink = document.createElement('a');
+    icsLink.className = 'ics-link';
+    icsLink.title = 'Добавить в календарь';
+    icsLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
+    icsLink.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+    bodyEl.appendChild(icsLink);
+
+    const footer = document.createElement('div');
+    footer.className = 'discover-footer';
+
+    const going = post.rsvps.filter((r) => r.status === 'GOING');
+    if (going.length) {
+      const goingWrap = document.createElement('div');
+      goingWrap.className = 'discover-going';
+      const avatars = document.createElement('div');
+      avatars.className = 'discover-going-avatars';
+      for (const r of going.slice(0, 3)) {
+        avatars.appendChild(buildAvatarElement(r.user));
+      }
+      const text = document.createElement('div');
+      text.className = 'discover-going-text';
+      const first = document.createElement('b');
+      first.textContent = going[0].user.name;
+      text.appendChild(first);
+      text.appendChild(document.createTextNode(going.length > 1 ? ` и ещё ${going.length - 1} идут` : ' идёт'));
+      goingWrap.append(avatars, text);
+      footer.appendChild(goingWrap);
+    }
+
+    footer.appendChild(buildReactionButton(post));
+
+    if (currentUser) {
+      const { section, flagWrap } = buildActionsSection(post);
+      card.appendChild(flagWrap);
+      footer.appendChild(section);
+    }
+
+    bodyEl.appendChild(footer);
+    bodyEl.appendChild(buildCommentsSection(post));
+
+    card.append(photo, bodyEl);
+    eventsRow.appendChild(card);
+  }
+
+  eventsLoadMore.classList.toggle('hidden', posts.length <= eventsVisible);
+}
+
+function renderFeed(posts) {
+  latestPosts = posts;
+  renderCompanyGrid(posts.filter((p) => p.type === 'ANNOUNCEMENT'));
+  renderEventCards(posts.filter((p) => p.type === 'EVENT'));
+  renderPosts(posts.filter((p) => p.type === 'POST'));
+}
+
 async function fetchPosts() {
   const token = localStorage.getItem('token');
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const params = new URLSearchParams();
   if (selectedBorough) params.set('borough', selectedBorough);
-  if (selectedFeedType) params.set('type', selectedFeedType);
   if (feedScopeValue === 'following') params.set('following', '1');
   const query = params.toString() ? `?${params.toString()}` : '';
 
@@ -484,42 +652,86 @@ async function fetchPosts() {
   if (!res.ok) return;
 
   const posts = await res.json();
-  renderPosts(posts);
+  renderFeed(posts);
+}
+
+function districtLabelFor(borough) {
+  return borough ? BOROUGHS[borough] : 'Все районы';
+}
+
+function closeDistrictMenu() {
+  districtMenuOpen = false;
+  districtMenu.hidden = true;
+  districtTrigger.classList.remove('open');
+  districtTrigger.setAttribute('aria-expanded', 'false');
+}
+
+function renderDistrictMenu(boroughs) {
+  districtMenu.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button';
+  allBtn.dataset.borough = '';
+  allBtn.textContent = 'Все районы';
+  allBtn.className = selectedBorough === '' ? 'active' : '';
+  districtMenu.appendChild(allBtn);
+
+  for (const borough of boroughs) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.borough = borough;
+    btn.textContent = BOROUGHS[borough];
+    btn.className = selectedBorough === borough ? 'active' : '';
+    districtMenu.appendChild(btn);
+  }
+  districtLabel.textContent = districtLabelFor(selectedBorough);
 }
 
 async function fetchBoroughs() {
   const res = await fetch(`${API_BASE_URL}/api/boroughs`);
   if (!res.ok) return;
-
   const boroughs = await res.json();
-  for (const borough of boroughs) {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'area-chip';
-    chip.dataset.borough = borough;
-    chip.textContent = BOROUGHS[borough];
-    areaFilter.appendChild(chip);
-  }
+  renderDistrictMenu(boroughs);
 }
 
-areaFilter.addEventListener('click', (e) => {
-  const chip = e.target.closest('.area-chip');
-  if (!chip) return;
-  selectedBorough = chip.dataset.borough || '';
-  areaFilter.querySelectorAll('.area-chip').forEach((c) => {
-    c.classList.toggle('active', c === chip);
+districtTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  districtMenuOpen = !districtMenuOpen;
+  districtMenu.hidden = !districtMenuOpen;
+  districtTrigger.classList.toggle('open', districtMenuOpen);
+  districtTrigger.setAttribute('aria-expanded', String(districtMenuOpen));
+});
+
+districtMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-borough]');
+  if (!btn) return;
+  selectedBorough = btn.dataset.borough;
+  companyVisible = 3;
+  eventsVisible = 3;
+  closeDistrictMenu();
+  districtMenu.querySelectorAll('button').forEach((b) => {
+    b.classList.toggle('active', b === btn);
   });
+  districtLabel.textContent = districtLabelFor(selectedBorough);
   fetchPosts();
 });
 
-typeFilter.addEventListener('click', (e) => {
-  const chip = e.target.closest('.area-chip');
-  if (!chip) return;
-  selectedFeedType = chip.dataset.type || '';
-  typeFilter.querySelectorAll('.area-chip').forEach((c) => {
-    c.classList.toggle('active', c === chip);
-  });
-  fetchPosts();
+document.addEventListener('click', (e) => {
+  if (districtMenuOpen && !e.target.closest('.district-select')) closeDistrictMenu();
+});
+
+companyLoadMore.addEventListener('click', () => {
+  companyVisible = Infinity;
+  renderCompanyGrid(latestPosts.filter((p) => p.type === 'ANNOUNCEMENT'));
+});
+
+eventsLoadMore.addEventListener('click', () => {
+  eventsVisible = Infinity;
+  renderEventCards(latestPosts.filter((p) => p.type === 'EVENT'));
+});
+
+createEventBtn.addEventListener('click', () => {
+  if (!currentUser) { openModal('login'); return; }
+  openPostModal('EVENT');
 });
 
 feedScope.addEventListener('click', (e) => {
@@ -586,6 +798,10 @@ postForm.addEventListener('submit', async (e) => {
   if (selectedType === 'EVENT') {
     body.eventDate = postEventDateInput.value;
     body.maxParticipants = postMaxParticipantsInput.value;
+    body.tags = postTagsInput.value
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
   }
 
   try {
@@ -606,10 +822,7 @@ postForm.addEventListener('submit', async (e) => {
 
     postMessage.textContent = '';
     postForm.reset();
-    selectedType = 'POST';
-    typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === 'POST'));
-    postEventDateInput.classList.add('hidden');
-    postMaxParticipantsInput.classList.add('hidden');
+    setPostType('POST');
     closePostModal();
     fetchPosts();
   } catch {

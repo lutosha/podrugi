@@ -31,22 +31,46 @@
     </section>
 
     <section id="feed" class="feed">
-      <h2 id="feedTitle">Лента</h2>
       <div id="feedScope" class="feed-scope hidden">
         <button type="button" class="scope-btn active" data-scope="all">Все</button>
         <button type="button" class="scope-btn" data-scope="following">Подруги</button>
       </div>
-      <div id="areaFilter" class="area-chips">
-        <button type="button" class="area-chip active" data-borough="">Все районы</button>
+
+      <div class="top-district-bar">
+        <div class="district-select" id="districtSelect">
+          <button class="district-trigger" type="button" id="districtTrigger" aria-haspopup="listbox" aria-expanded="false">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>
+            <span id="districtLabel">Все районы</span>
+            <svg class="chev" width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="district-menu" id="districtMenu" role="listbox" hidden></div>
+        </div>
       </div>
-      <div id="typeFilter" class="area-chips">
-        <button type="button" class="area-chip active" data-type="">Все типы</button>
-        <button type="button" class="area-chip" data-type="POST">Посты</button>
-        <button type="button" class="area-chip" data-type="ANNOUNCEMENT">Объявления</button>
-        <button type="button" class="area-chip" data-type="EVENT">События</button>
-      </div>
-      <div id="postsList"></div>
-      <p id="feedHint" class="feed-hint hidden">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
+
+      <section class="humans-section">
+        <div class="section-header">
+          <div class="section-title">Ищу компанию</div>
+        </div>
+        <div class="humans-row" id="companyRow"></div>
+        <button class="section-load-more hidden" id="companyLoadMore" type="button">Загрузить ещё</button>
+      </section>
+
+      <section class="discover-section">
+        <div class="section-header">
+          <div class="section-title">Мероприятия</div>
+          <button class="section-create-btn" id="createEventBtn" type="button">+ Создать</button>
+        </div>
+        <div class="discover-row" id="eventsRow"></div>
+        <button class="section-load-more hidden" id="eventsLoadMore" type="button">Загрузить ещё</button>
+      </section>
+
+      <section class="posts-section">
+        <div class="section-header">
+          <div class="section-title">Посты</div>
+        </div>
+        <div id="postsList" class="feed-list"></div>
+        <p id="feedHint" class="feed-hint hidden">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
+      </section>
     </section>
   </main>
 
@@ -87,6 +111,7 @@
         </select>
         <input type="datetime-local" id="postEventDate" class="hidden" />
         <input type="number" id="postMaxParticipants" class="hidden" placeholder="Лимит участников (необязательно)" min="1" max="1000" />
+        <input type="text" id="postTags" class="hidden" placeholder="Теги через запятую (например: скоро, на природе)" maxlength="100" />
         <button type="submit" class="btn btn-primary">Опубликовать</button>
         <p id="postMessage"></p>
       </form>

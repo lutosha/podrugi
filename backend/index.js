@@ -55,6 +55,7 @@ const postSchema = z.object({
   borough: z.nativeEnum(Borough).optional().or(z.literal('')),
   eventDate: z.string().optional(),
   maxParticipants: z.coerce.number().int().min(1).max(1000).optional().or(z.literal('')),
+  tags: z.array(z.string().trim().min(1).max(20)).max(5).optional(),
 }).refine(
   (data) => data.type !== 'EVENT' || (data.eventDate && !isNaN(Date.parse(data.eventDate))),
   { message: 'Для события нужна корректная дата', path: ['eventDate'] },
@@ -131,7 +132,9 @@ const postInclude = {
     orderBy: { createdAt: 'asc' },
     include: { author: { select: { id: true, name: true } } },
   },
-  rsvps: { select: { userId: true, status: true } },
+  rsvps: {
+    select: { userId: true, status: true, user: { select: { name: true, avatar: true } } },
+  },
   reactions: { select: { userId: true } },
 };
 
@@ -280,7 +283,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'Проверь текст, тип и (для события) дату' });
   }
-  const { type, content, borough, eventDate, maxParticipants } = parsed.data;
+  const { type, content, borough, eventDate, maxParticipants, tags } = parsed.data;
 
   const post = await prisma.post.create({
     data: {
@@ -289,6 +292,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
       borough: borough || null,
       eventDate: type === 'EVENT' ? new Date(eventDate) : null,
       maxParticipants: type === 'EVENT' && maxParticipants ? maxParticipants : null,
+      tags: type === 'EVENT' && tags ? tags : [],
       authorId: req.user.userId,
     },
     include: postInclude,

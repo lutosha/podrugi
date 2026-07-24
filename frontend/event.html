@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#c6597a" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <title>Мероприятие — Podrugi</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app event-page" id="app">
+    <header class="event-header">
+      <a class="icon-btn" id="backBtn" href="index.html" aria-label="Назад">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <div class="header-title">Мероприятие</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="shareBtn" type="button" aria-label="Поделиться">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" id="saveBtn" type="button" aria-label="Нравится">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 3.2c2.3-.4 4.3.7 6 2.8 1.7-2.1 3.7-3.2 6-2.8 4 .8 5.5 4.8 4 8.5-2.5 4.7-10 9.3-10 9.3Z" stroke="currentColor" stroke-width="1.7"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="hero-photo" id="heroPhoto"></div>
+
+    <div class="content" id="eventContent">
+      <p id="eventMessage" style="padding: 1rem 0; color: var(--ink-secondary);"></p>
+    </div>
+
+    <div class="bottom-bar" id="bottomBar" hidden>
+      <div class="going-count" id="goingCount"></div>
+      <div class="rsvp-group">
+        <button class="ev-rsvp-btn" id="rsvpGoing" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Иду
+        </button>
+        <button class="ev-rsvp-btn" id="rsvpMaybe" type="button">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.7"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">?</text></svg>
+          Возможно
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+  <script src="event.js"></script>
+</body>
+</html>

@@ -52,6 +52,9 @@ const loginSchema = z.object({
 const postSchema = z.object({
   type: z.enum(['POST', 'ANNOUNCEMENT', 'EVENT']).default('POST'),
   content: z.string().trim().min(1).max(2000),
+  title: z.string().trim().min(1).max(100).optional().or(z.literal('')),
+  venue: z.string().trim().max(100).optional().or(z.literal('')),
+  address: z.string().trim().max(200).optional().or(z.literal('')),
   borough: z.nativeEnum(Borough).optional().or(z.literal('')),
   eventDate: z.string().optional(),
   maxParticipants: z.coerce.number().int().min(1).max(1000).optional().or(z.literal('')),
@@ -59,6 +62,9 @@ const postSchema = z.object({
 }).refine(
   (data) => data.type !== 'EVENT' || (data.eventDate && !isNaN(Date.parse(data.eventDate))),
   { message: 'Для события нужна корректная дата', path: ['eventDate'] },
+).refine(
+  (data) => data.type !== 'EVENT' || (data.title && data.title.trim()),
+  { message: 'Для события нужно название', path: ['title'] },
 );
 
 const commentSchema = z.object({
@@ -127,7 +133,7 @@ const BOROUGH_LABELS = {
 };
 
 const postInclude = {
-  author: { select: { id: true, name: true, borough: true, avatar: true } },
+  author: { select: { id: true, name: true, borough: true, avatar: true, bio: true } },
   comments: {
     orderBy: { createdAt: 'asc' },
     include: { author: { select: { id: true, name: true } } },
@@ -283,12 +289,15 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'Проверь текст, тип и (для события) дату' });
   }
-  const { type, content, borough, eventDate, maxParticipants, tags } = parsed.data;
+  const { type, content, title, venue, address, borough, eventDate, maxParticipants, tags } = parsed.data;
 
   const post = await prisma.post.create({
     data: {
       type,
       content,
+      title: type === 'EVENT' && title ? title : null,
+      venue: type === 'EVENT' && venue ? venue : null,
+      address: type === 'EVENT' && address ? address : null,
       borough: borough || null,
       eventDate: type === 'EVENT' ? new Date(eventDate) : null,
       maxParticipants: type === 'EVENT' && maxParticipants ? maxParticipants : null,
@@ -350,7 +359,7 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
   res.json(postsWithFollowInfo);
 });
 
-// один пост целиком (для страницы post.html)
+// один пост целиком (для страниц post.html/event.html)
 app.get('/api/posts/:id', optionalAuth, async (req, res) => {
   const postId = Number(req.params.id);
   if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
@@ -358,15 +367,42 @@ app.get('/api/posts/:id', optionalAuth, async (req, res) => {
   const post = await prisma.post.findUnique({ where: { id: postId }, include: postInclude });
   if (!post) return res.status(404).json({ error: 'Пост не найден' });
 
+  const blockedIds = await getBlockedUserIds(req.user?.userId);
   let authorIsFollowed = false;
   if (req.user) {
-    const blockedIds = await getBlockedUserIds(req.user.userId);
     if (blockedIds.includes(post.authorId)) return res.status(404).json({ error: 'Пост не найден' });
     const followingIds = await getFollowingIds(req.user.userId);
     authorIsFollowed = followingIds.includes(post.authorId);
   }
 
-  res.json({ ...post, authorIsFollowed });
+  const result = { ...post, authorIsFollowed };
+
+  // для страницы мероприятия: сколько всего событий у организатора + похожие события (район или общие теги)
+  if (post.type === 'EVENT') {
+    const eventCount = await prisma.post.count({ where: { authorId: post.authorId, type: 'EVENT' } });
+    result.author = { ...post.author, eventCount };
+
+    const similarFilters = [
+      ...(post.borough ? [{ borough: post.borough }] : []),
+      ...(post.tags.length ? [{ tags: { hasSome: post.tags } }] : []),
+    ];
+    result.similarEvents = similarFilters.length
+      ? await prisma.post.findMany({
+          where: {
+            id: { not: post.id },
+            type: 'EVENT',
+            eventDate: { gte: new Date() },
+            ...(blockedIds.length ? { authorId: { notIn: blockedIds } } : {}),
+            OR: similarFilters,
+          },
+          orderBy: { eventDate: 'asc' },
+          take: 6,
+          include: postInclude,
+        })
+      : [];
+  }
+
+  res.json(result);
 });
 
 function icsEscape(text) {

@@ -19,6 +19,9 @@ const postBoroughInput = document.getElementById('postBorough');
 const postEventDateInput = document.getElementById('postEventDate');
 const postMaxParticipantsInput = document.getElementById('postMaxParticipants');
 const postTagsInput = document.getElementById('postTags');
+const eventDateField = document.getElementById('eventDateField');
+const eventLimitField = document.getElementById('eventLimitField');
+const eventTagsField = document.getElementById('eventTagsField');
 const typeTabs = document.querySelectorAll('.type-tab');
 const postsList = document.getElementById('postsList');
 const companyRow = document.getElementById('companyRow');
@@ -53,12 +56,12 @@ const HEART_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><
 const COMMENT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-width="1.7"/></svg>';
 const ADD_FRIEND_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3 2.9-5 6-5s5.4 2 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const FRIEND_CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3 2.9-5 6-5s5.4 2 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15 11.5l2 2 3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const WRITE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-width="1.7"/></svg>';
+const WRITE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21.5 2.5 11 13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.5 2.5 15 21l-4-8-8-4 18.5-6.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const PIN_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>';
 const CAL_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
 const RSVP_GOING_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const RSVP_MAYBE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.7"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">?</text></svg>';
-const ICS_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 13v5M9.5 15.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const ICS_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M3 9.5h18" stroke="currentColor" stroke-width="1.7"/><path d="M8 2.5v4M16 2.5v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 12.5v5M9.5 15h5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
 const SHARE_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M8.2 10.8l7.6-4.2M8.2 13.2l7.6 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
 
 const BOROUGHS = {
@@ -152,18 +155,27 @@ function buildAvatarElement(user) {
   return el;
 }
 
+const POST_PLACEHOLDERS = {
+  ANNOUNCEMENT: 'Ищете компанию для йоги, музея или соседку по квартире? Напишите здесь',
+  EVENT: 'Планируете встречу, пикник или мастер-класс? Расскажите, когда и куда приходить',
+  POST: 'Посоветуйте мастера, место или продайте/отдайте вещь — соседки увидят',
+};
+
 function setPostType(type) {
   selectedType = type;
   typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === type));
-  postEventDateInput.classList.toggle('hidden', selectedType !== 'EVENT');
-  postEventDateInput.required = selectedType === 'EVENT';
-  postMaxParticipantsInput.classList.toggle('hidden', selectedType !== 'EVENT');
-  postTagsInput.classList.toggle('hidden', selectedType !== 'EVENT');
+  const isEvent = selectedType === 'EVENT';
+  eventDateField.classList.toggle('hidden', !isEvent);
+  postEventDateInput.required = isEvent;
+  eventLimitField.classList.toggle('hidden', !isEvent);
+  eventTagsField.classList.toggle('hidden', !isEvent);
+  postContentInput.placeholder = POST_PLACEHOLDERS[type] || '';
 }
 
 typeTabs.forEach((tab) => {
   tab.addEventListener('click', () => setPostType(tab.dataset.type));
 });
+setPostType(selectedType);
 
 function openModal(newMode) {
   mode = newMode;
@@ -345,19 +357,12 @@ function buildRsvpRow(post) {
     row.appendChild(button);
   }
 
-  const icsLink = document.createElement('a');
-  icsLink.className = 'ics-link';
-  icsLink.title = 'Добавить в календарь';
-  icsLink.setAttribute('aria-label', 'Добавить в календарь');
-  icsLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
-  icsLink.innerHTML = ICS_SVG;
-  row.appendChild(icsLink);
-
   return row;
 }
 
-// ряд действий под постом/событием: лайк, комментарии (тумблер), иконки «в подруги»/«написать»
-function buildActionRow(post, commentsSection) {
+// ряд действий под постом/событием: лайк, комментарии (тумблер), иконки справа.
+// isEvent=true → вместо «написать в личку» показываем «добавить в календарь».
+function buildActionRow(post, commentsSection, isEvent = false) {
   const row = document.createElement('div');
   row.className = 'action-row';
 
@@ -389,10 +394,11 @@ function buildActionRow(post, commentsSection) {
   });
   row.appendChild(commentBtn);
 
-  if (currentUser && currentUser.id !== post.author.id) {
-    const iconActions = document.createElement('div');
-    iconActions.className = 'icon-actions';
+  const iconActions = document.createElement('div');
+  iconActions.className = 'icon-actions';
+  let hasIcon = false;
 
+  if (currentUser && currentUser.id !== post.author.id) {
     const followBtn = document.createElement('button');
     followBtn.type = 'button';
     followBtn.className = 'icon-action-btn';
@@ -409,17 +415,34 @@ function buildActionRow(post, commentsSection) {
       });
       if (res.ok || res.status === 204) fetchPosts();
     });
+    iconActions.appendChild(followBtn);
+    hasIcon = true;
 
-    const writeLink = document.createElement('a');
-    writeLink.className = 'icon-action-btn';
-    writeLink.title = 'Написать';
-    writeLink.setAttribute('aria-label', 'Написать');
-    writeLink.href = `messages.html?to=${post.author.id}&name=${encodeURIComponent(post.author.name)}`;
-    writeLink.innerHTML = WRITE_SVG;
-
-    iconActions.append(followBtn, writeLink);
-    row.appendChild(iconActions);
+    // «написать в личку» — только у постов (у мероприятий на этом месте календарь)
+    if (!isEvent) {
+      const writeLink = document.createElement('a');
+      writeLink.className = 'icon-action-btn';
+      writeLink.title = 'Написать в личку';
+      writeLink.setAttribute('aria-label', 'Написать в личку');
+      writeLink.href = `messages.html?to=${post.author.id}&name=${encodeURIComponent(post.author.name)}`;
+      writeLink.innerHTML = WRITE_SVG;
+      iconActions.appendChild(writeLink);
+    }
   }
+
+  // «добавить в календарь» — у мероприятий, доступно всем (включая гостя и автора)
+  if (isEvent) {
+    const calLink = document.createElement('a');
+    calLink.className = 'icon-action-btn';
+    calLink.title = 'Добавить в календарь';
+    calLink.setAttribute('aria-label', 'Добавить в календарь');
+    calLink.href = `${API_BASE_URL}/api/posts/${post.id}/ics`;
+    calLink.innerHTML = ICS_SVG;
+    iconActions.appendChild(calLink);
+    hasIcon = true;
+  }
+
+  if (hasIcon) row.appendChild(iconActions);
 
   return row;
 }
@@ -470,6 +493,8 @@ function renderPosts(posts) {
     content.textContent = post.content;
     body.appendChild(content);
 
+    const postUrl = `post.html?id=${post.id}`;
+
     const comments = buildCommentsSection(post);
     body.appendChild(buildActionRow(post, comments));
     body.appendChild(comments);
@@ -478,6 +503,19 @@ function renderPosts(posts) {
     card.appendChild(top);
 
     postsList.appendChild(card);
+
+    // если текст обрезан (>5 строк) — по клику открываем пост целиком на отдельной странице
+    requestAnimationFrame(() => {
+      if (content.scrollHeight - content.clientHeight > 2) {
+        content.classList.add('truncated');
+        content.addEventListener('click', () => { window.location.href = postUrl; });
+        const more = document.createElement('a');
+        more.className = 'read-more';
+        more.href = postUrl;
+        more.textContent = 'Читать дальше';
+        content.after(more);
+      }
+    });
   }
 }
 
@@ -528,9 +566,26 @@ function renderCompanyGrid(posts) {
 
     card.append(avatarWrap, info);
     companyRow.appendChild(card);
+
+    // обрезаем превью до 2 строк с чистым «…» (без пробела перед троеточием).
+    // чтение scrollHeight форсирует синхронный layout, поэтому меряем сразу после вставки.
+    clampToLines(status, post.content, 2);
   }
 
   companyLoadMore.classList.toggle('hidden', posts.length <= companyVisible);
+}
+
+// подрезать текст элемента до maxLines строк, добавив «…» вплотную к последнему слову
+function clampToLines(el, fullText, maxLines) {
+  el.textContent = fullText;
+  const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 16;
+  const maxHeight = lineHeight * maxLines + 1;
+  if (el.scrollHeight <= maxHeight) return;
+  const words = fullText.split(/\s+/);
+  while (words.length > 1 && el.scrollHeight > maxHeight) {
+    words.pop();
+    el.textContent = words.join(' ') + '…';
+  }
 }
 
 function closeViewPostModal() {
@@ -538,7 +593,7 @@ function closeViewPostModal() {
   viewPostBody.innerHTML = '';
 }
 
-// показать полное сообщение «Ищу компанию» в модалке (автор кликабелен, комментарии развёрнуты)
+// показать полное сообщение «Ищу компанию» в модалке + переписка в личке
 function openViewPostModal(post) {
   viewPostBody.innerHTML = '';
 
@@ -569,12 +624,89 @@ function openViewPostModal(post) {
   text.textContent = post.content;
   viewPostBody.appendChild(text);
 
-  const comments = buildCommentsSection(post);
-  comments.classList.remove('hidden');
-  viewPostBody.appendChild(buildActionRow(post, comments));
-  viewPostBody.appendChild(comments);
+  viewPostBody.appendChild(buildDmSection(post.author));
 
   viewPostModal.classList.remove('hidden');
+}
+
+// личная переписка с автором объявления (тянется из /api/messages)
+function buildDmSection(author) {
+  const wrap = document.createElement('div');
+  wrap.className = 'view-post-dm';
+
+  if (!currentUser) {
+    const hint = document.createElement('p');
+    hint.className = 'dm-hint';
+    hint.textContent = 'Войди, чтобы написать в личку.';
+    wrap.appendChild(hint);
+    return wrap;
+  }
+  if (currentUser.id === author.id) {
+    const hint = document.createElement('p');
+    hint.className = 'dm-hint';
+    hint.textContent = 'Это твоё объявление.';
+    wrap.appendChild(hint);
+    return wrap;
+  }
+
+  const thread = document.createElement('div');
+  thread.className = 'dm-thread';
+  wrap.appendChild(thread);
+  loadDmThread(author.id, thread);
+
+  const form = document.createElement('form');
+  form.className = 'comment-form';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Написать в личку…';
+  input.maxLength = 2000;
+  input.required = true;
+  const button = document.createElement('button');
+  button.type = 'submit';
+  button.className = 'btn btn-primary';
+  button.textContent = 'Отправить';
+  form.append(input, button);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/api/messages/${author.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ content: input.value }),
+    });
+    if (res.ok) {
+      input.value = '';
+      loadDmThread(author.id, thread);
+      updateNavBadges();
+    }
+  });
+  wrap.appendChild(form);
+
+  return wrap;
+}
+
+async function loadDmThread(userId, thread) {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_BASE_URL}/api/messages/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return;
+  const messages = await res.json();
+  thread.innerHTML = '';
+  if (messages.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'dm-hint';
+    empty.textContent = 'Начните переписку — напишите первое сообщение.';
+    thread.appendChild(empty);
+    return;
+  }
+  for (const m of messages) {
+    const bubble = document.createElement('div');
+    bubble.className = m.senderId === currentUser.id ? 'dm-msg dm-msg-mine' : 'dm-msg';
+    bubble.textContent = m.content;
+    thread.appendChild(bubble);
+  }
+  thread.scrollTop = thread.scrollHeight;
 }
 
 function firstSentence(text) {
@@ -687,7 +819,7 @@ function renderEventCards(posts) {
     }
 
     const comments = buildCommentsSection(post);
-    footer.appendChild(buildActionRow(post, comments));
+    footer.appendChild(buildActionRow(post, comments, true));
 
     bodyEl.appendChild(footer);
     bodyEl.appendChild(comments);

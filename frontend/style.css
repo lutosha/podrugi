@@ -294,6 +294,11 @@ nav {
   padding: 22px 0 12px;
 }
 
+/* первая секция сразу под фильтром районов — меньше отступа сверху */
+.humans-section .section-header {
+  padding-top: 8px;
+}
+
 .section-title {
   font-size: 17px;
   font-weight: 800;
@@ -391,10 +396,9 @@ nav {
   color: var(--ink);
   line-height: 1.28;
   margin-bottom: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  max-height: 2.56em;
   overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .human-meta {
@@ -506,6 +510,11 @@ nav {
   margin-bottom: 4px;
 }
 
+/* больше воздуха под датой события до кнопок RSVP */
+.discover-body .event-meta-row {
+  margin-bottom: 12px;
+}
+
 .card-headline {
   font-size: 14.5px;
   font-weight: 800;
@@ -518,7 +527,7 @@ nav {
 .feed-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 /* обычная карточка поста — как .card в мокапе */
@@ -573,6 +582,49 @@ nav {
   line-height: 1.5;
   margin: 4px 0 10px;
   color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* в ленте пост-превью не длиннее 5 строк, дальше — на отдельной странице */
+.feed-list .card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.feed-list .card-text.truncated {
+  cursor: pointer;
+}
+
+.read-more,
+.read-more:link,
+.read-more:visited {
+  display: inline-block;
+  margin: -4px 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--heading);
+  text-decoration: none;
+}
+
+.read-more:hover {
+  text-decoration: underline;
+}
+
+.back-link,
+.back-link:link,
+.back-link:visited {
+  display: inline-block;
+  margin: 1rem 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--heading);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
 }
 
 /* строка мета (район/дата) с иконкой */
@@ -1123,30 +1175,51 @@ a.post-card:visited {
 .post-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* поле с подписью сверху (как в прототипе) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--heading);
 }
 
 .post-form textarea,
-.post-form input {
-  padding: 0.65rem 0.9rem;
-  border-radius: 12px;
+.post-form input,
+.post-form select {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  font-size: 1rem;
+  font-size: 14px;
   font-family: inherit;
-  background: var(--card);
+  background: var(--bg);
   color: var(--ink);
+}
+
+.post-form textarea {
+  min-height: 84px;
   resize: vertical;
 }
 
 .post-form textarea:focus,
-.post-form input:focus {
+.post-form input:focus,
+.post-form select:focus {
   outline: none;
   border-color: var(--accent);
 }
 
-.post-form button {
-  align-self: flex-start;
+.post-form > .btn {
+  width: 100%;
+  margin-top: 4px;
 }
 
 .feed-hint {
@@ -1243,6 +1316,47 @@ a.post-card:visited {
   margin-bottom: 12px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* переписка в личке внутри модалки «Ищу компанию» */
+.view-post-dm {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.dm-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.dm-msg {
+  align-self: flex-start;
+  max-width: 82%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 7px 11px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.dm-msg-mine {
+  align-self: flex-end;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.dm-hint {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  padding: 4px 0 8px;
 }
 
 #authForm {

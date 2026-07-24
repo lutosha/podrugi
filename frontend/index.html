@@ -119,17 +119,32 @@
       <h2 class="font-display">Новый пост</h2>
       <form id="postForm" class="post-form">
         <div class="type-tabs">
-          <button type="button" class="type-tab active" data-type="POST">Пост</button>
-          <button type="button" class="type-tab" data-type="ANNOUNCEMENT">Ищу компанию</button>
-          <button type="button" class="type-tab" data-type="EVENT">Событие</button>
+          <button type="button" class="type-tab active" data-type="ANNOUNCEMENT">Ищу компанию</button>
+          <button type="button" class="type-tab" data-type="EVENT">Мероприятие</button>
+          <button type="button" class="type-tab" data-type="POST">Пост</button>
         </div>
-        <textarea id="postContent" placeholder="Что у тебя нового?" required maxlength="2000"></textarea>
-        <select id="postBorough">
-          <option value="">Без района</option>
-        </select>
-        <input type="datetime-local" id="postEventDate" class="hidden" />
-        <input type="number" id="postMaxParticipants" class="hidden" placeholder="Лимит участников (необязательно)" min="1" max="1000" />
-        <input type="text" id="postTags" class="hidden" placeholder="Теги через запятую (например: скоро, на природе)" maxlength="100" />
+        <div class="field">
+          <label for="postContent">Текст</label>
+          <textarea id="postContent" required maxlength="2000"></textarea>
+        </div>
+        <div class="field">
+          <label for="postBorough">Район</label>
+          <select id="postBorough">
+            <option value="">Без района</option>
+          </select>
+        </div>
+        <div class="field hidden" id="eventDateField">
+          <label for="postEventDate">Дата и время события</label>
+          <input type="datetime-local" id="postEventDate" />
+        </div>
+        <div class="field hidden" id="eventLimitField">
+          <label for="postMaxParticipants">Лимит участников (необязательно)</label>
+          <input type="number" id="postMaxParticipants" placeholder="Например, 20" min="1" max="1000" />
+        </div>
+        <div class="field hidden" id="eventTagsField">
+          <label for="postTags">Теги через запятую (необязательно)</label>
+          <input type="text" id="postTags" placeholder="Например: скоро, на природе" maxlength="100" />
+        </div>
         <button type="submit" class="btn btn-primary">Опубликовать</button>
         <p id="postMessage"></p>
       </form>

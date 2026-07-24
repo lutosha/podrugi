@@ -350,6 +350,25 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
   res.json(postsWithFollowInfo);
 });
 
+// один пост целиком (для страницы post.html)
+app.get('/api/posts/:id', optionalAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId)) return res.status(400).json({ error: 'Некорректный id' });
+
+  const post = await prisma.post.findUnique({ where: { id: postId }, include: postInclude });
+  if (!post) return res.status(404).json({ error: 'Пост не найден' });
+
+  let authorIsFollowed = false;
+  if (req.user) {
+    const blockedIds = await getBlockedUserIds(req.user.userId);
+    if (blockedIds.includes(post.authorId)) return res.status(404).json({ error: 'Пост не найден' });
+    const followingIds = await getFollowingIds(req.user.userId);
+    authorIsFollowed = followingIds.includes(post.authorId);
+  }
+
+  res.json({ ...post, authorIsFollowed });
+});
+
 function icsEscape(text) {
   return String(text).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 }

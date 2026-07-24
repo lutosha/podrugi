@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#c6597a" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <title>Пост — Podrugi</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="app">
+  <header class="site-header">
+    <img src="assets/logo.svg" alt="Podrugi" class="logo" />
+    <a id="notificationsLink" href="notifications.html" class="notif-bell hidden">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 2 6.5H4c.5-1 2-2.5 2-6.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span id="notificationsBadge" class="nav-badge hidden"></span>
+    </a>
+  </header>
+
+  <main class="feed">
+    <a href="index.html" class="back-link">← В ленту</a>
+    <p id="postMessage"></p>
+    <div id="postDetail"></div>
+  </main>
+
+  <nav id="bottomNav" class="bottom-nav hidden">
+    <a href="index.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><span>Лента</span>
+    </a>
+    <a href="friends.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3.2" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="10" r="2.6" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3 2.9-5 6-5s5.4 2 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15 19c.4-2 1.9-3.4 4-3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span id="friendsBadge" class="nav-badge hidden"></span></span><span>Подруги</span>
+    </a>
+    <a href="index.html?compose=1" class="bottom-nav-item bottom-nav-compose" aria-label="Новый пост">
+      <span class="bottom-nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+    </a>
+    <a href="messages.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-width="1.7"/></svg><span id="messagesBadge" class="nav-badge hidden"></span></span><span>Сообщения</span>
+    </a>
+    <a id="bottomProfileLink" href="profile.html" class="bottom-nav-item">
+      <span id="bottomProfileAvatar" class="bottom-nav-avatar">👤</span><span>Профиль</span>
+    </a>
+  </nav>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+  <script src="post.js"></script>
+</body>
+</html>

@@ -62,6 +62,7 @@
       <section class="humans-section">
         <div class="section-header">
           <div class="section-title">Ищу компанию</div>
+          <button class="section-create-btn" id="createCompanyBtn" type="button">+ Создать</button>
         </div>
         <div class="humans-row" id="companyRow"></div>
         <button class="section-load-more hidden" id="companyLoadMore" type="button">Загрузить ещё</button>
@@ -79,6 +80,7 @@
       <section class="posts-section">
         <div class="section-header">
           <div class="section-title">Посты</div>
+          <button class="section-create-btn" id="createPostBtn" type="button">+ Создать</button>
         </div>
         <div id="postsList" class="feed-list"></div>
         <p id="feedHint" class="feed-hint hidden">Войди или зарегистрируйся, чтобы увидеть больше и написать самой.</p>
@@ -131,6 +133,13 @@
         <button type="submit" class="btn btn-primary">Опубликовать</button>
         <p id="postMessage"></p>
       </form>
+    </div>
+  </div>
+
+  <div id="viewPostModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="closeViewPostModal" class="modal-close">&times;</button>
+      <div id="viewPostBody"></div>
     </div>
   </div>
 

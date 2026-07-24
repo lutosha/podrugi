@@ -26,6 +26,11 @@ const companyLoadMore = document.getElementById('companyLoadMore');
 const eventsRow = document.getElementById('eventsRow');
 const eventsLoadMore = document.getElementById('eventsLoadMore');
 const createEventBtn = document.getElementById('createEventBtn');
+const createCompanyBtn = document.getElementById('createCompanyBtn');
+const createPostBtn = document.getElementById('createPostBtn');
+const viewPostModal = document.getElementById('viewPostModal');
+const viewPostBody = document.getElementById('viewPostBody');
+const closeViewPostModalBtn = document.getElementById('closeViewPostModal');
 const feedHint = document.getElementById('feedHint');
 const districtSelect = document.getElementById('districtSelect');
 const districtTrigger = document.getElementById('districtTrigger');
@@ -490,30 +495,86 @@ function renderCompanyGrid(posts) {
   }
 
   for (const post of visible) {
-    const card = document.createElement('a');
+    const card = document.createElement('div');
     card.className = 'human-card';
-    card.href = `profile.html?id=${post.author.id}`;
 
-    const avatarWrap = document.createElement('div');
+    // кружок аватара ведёт на профиль автора
+    const avatarWrap = document.createElement('a');
     avatarWrap.className = 'human-avatar-wrap';
+    avatarWrap.href = `profile.html?id=${post.author.id}`;
     avatarWrap.appendChild(buildAvatarElement(post.author));
     const dot = document.createElement('span');
     dot.className = 'human-status-dot';
     avatarWrap.appendChild(dot);
 
+    // текст + район открывают сообщение в модалке
+    const info = document.createElement('button');
+    info.type = 'button';
+    info.className = 'human-info';
+
     const status = document.createElement('div');
     status.className = 'human-status';
     status.textContent = post.content;
+    info.appendChild(status);
 
-    const meta = document.createElement('div');
-    meta.className = 'human-meta';
-    meta.textContent = post.borough ? BOROUGHS[post.borough] : post.author.name;
+    if (post.borough) {
+      const meta = document.createElement('div');
+      meta.className = 'human-meta';
+      meta.textContent = BOROUGHS[post.borough];
+      info.appendChild(meta);
+    }
 
-    card.append(avatarWrap, status, meta);
+    info.addEventListener('click', () => openViewPostModal(post));
+
+    card.append(avatarWrap, info);
     companyRow.appendChild(card);
   }
 
   companyLoadMore.classList.toggle('hidden', posts.length <= companyVisible);
+}
+
+function closeViewPostModal() {
+  viewPostModal.classList.add('hidden');
+  viewPostBody.innerHTML = '';
+}
+
+// показать полное сообщение «Ищу компанию» в модалке (автор кликабелен, комментарии развёрнуты)
+function openViewPostModal(post) {
+  viewPostBody.innerHTML = '';
+
+  const header = document.createElement('div');
+  header.className = 'view-post-header';
+  const avatarLink = document.createElement('a');
+  avatarLink.href = `profile.html?id=${post.author.id}`;
+  avatarLink.appendChild(buildAvatarElement(post.author));
+  const nameLink = document.createElement('a');
+  nameLink.className = 'view-post-name';
+  nameLink.href = `profile.html?id=${post.author.id}`;
+  nameLink.textContent = post.author.name;
+  header.append(avatarLink, nameLink);
+  viewPostBody.appendChild(header);
+
+  if (post.borough) {
+    const borough = document.createElement('div');
+    borough.className = 'view-post-borough';
+    borough.innerHTML = PIN_SVG;
+    const span = document.createElement('span');
+    span.textContent = BOROUGHS[post.borough];
+    borough.appendChild(span);
+    viewPostBody.appendChild(borough);
+  }
+
+  const text = document.createElement('p');
+  text.className = 'view-post-text';
+  text.textContent = post.content;
+  viewPostBody.appendChild(text);
+
+  const comments = buildCommentsSection(post);
+  comments.classList.remove('hidden');
+  viewPostBody.appendChild(buildActionRow(post, comments));
+  viewPostBody.appendChild(comments);
+
+  viewPostModal.classList.remove('hidden');
 }
 
 function firstSentence(text) {
@@ -737,6 +798,21 @@ eventsLoadMore.addEventListener('click', () => {
 createEventBtn.addEventListener('click', () => {
   if (!currentUser) { openModal('login'); return; }
   openPostModal('EVENT');
+});
+
+createCompanyBtn.addEventListener('click', () => {
+  if (!currentUser) { openModal('login'); return; }
+  openPostModal('ANNOUNCEMENT');
+});
+
+createPostBtn.addEventListener('click', () => {
+  if (!currentUser) { openModal('login'); return; }
+  openPostModal('POST');
+});
+
+closeViewPostModalBtn.addEventListener('click', closeViewPostModal);
+viewPostModal.addEventListener('click', (e) => {
+  if (e.target === viewPostModal) closeViewPostModal();
 });
 
 feedScope.addEventListener('click', (e) => {

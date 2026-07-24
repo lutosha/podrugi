@@ -515,12 +515,20 @@ nav {
   margin-bottom: 12px;
 }
 
-.card-headline {
+.card-headline,
+a.card-headline:link,
+a.card-headline:visited {
+  display: block;
   font-size: 14.5px;
   font-weight: 800;
   color: var(--ink);
   line-height: 1.28;
   margin: 4px 0 6px;
+  text-decoration: none;
+}
+
+a.card-headline:hover {
+  text-decoration: underline;
 }
 
 /* список постов — вертикальный, с промежутками между карточками */
@@ -1606,4 +1614,578 @@ a.post-card:visited {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ============ страница мероприятия (event.html) ============ */
+/* все селекторы под .event-page, чтобы не конфликтовать с общими .section-title/.rsvp-btn и т.д. */
+
+.event-page {
+  background: var(--bg);
+}
+
+.event-page .event-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.event-page .icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.event-page .icon-btn:hover {
+  background: color-mix(in srgb, var(--accent-secondary) 18%, var(--card));
+}
+
+.event-page .icon-btn.liked {
+  color: var(--accent);
+}
+
+.event-page .icon-btn.liked svg {
+  fill: var(--accent);
+}
+
+.event-page .header-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.event-page .header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.event-page .hero-photo {
+  height: 220px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.event-page .content {
+  padding: 20px 20px 4px;
+}
+
+.event-page .event-title {
+  font-family: var(--font-display);
+  font-size: 25px;
+  line-height: 1.18;
+  font-weight: 500;
+  color: var(--heading);
+  text-wrap: balance;
+  margin: 0 0 14px;
+}
+
+.event-page .detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.event-page .detail-row svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--heading);
+}
+
+.event-page .detail-row .main {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.event-page .detail-row .sub {
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+
+.event-page .detail-row .ics-link {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--heading);
+}
+
+.event-page .detail-row .ics-link:hover {
+  background: color-mix(in srgb, var(--accent-secondary) 22%, var(--card));
+}
+
+.event-page .organizer-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.event-page .organizer-card .post-avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 1rem;
+}
+
+.event-page .organizer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-page .organizer-name,
+.event-page .organizer-name:link,
+.event-page .organizer-name:visited {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.event-page .organizer-name:hover {
+  text-decoration: underline;
+}
+
+.event-page .organizer-sub {
+  font-size: 12px;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+
+.event-page .organizer-card .icon-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+.event-page .tag-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.event-page .tag-pill {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink);
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.event-page .section-block {
+  margin-bottom: 22px;
+}
+
+.event-page .section-heading {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.event-page .section-heading .count {
+  color: var(--ink-secondary);
+  font-weight: 600;
+}
+
+.event-page .desc-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.event-page .desc-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.event-page .desc-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.event-page .desc-toggle:hover {
+  text-decoration: underline;
+}
+
+.event-page .attend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.event-page .attend-avatars {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.event-page .attend-avatars .post-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 0.7rem;
+  border: 2px solid var(--card);
+  margin-left: -8px;
+}
+
+.event-page .attend-avatars .post-avatar:first-child {
+  margin-left: 0;
+}
+
+.event-page .attend-text {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.event-page .attend-text b {
+  color: var(--heading);
+}
+
+.event-page .comment-item {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.event-page .comment-item .post-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+
+.event-page .comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-page .comment-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.event-page .comment-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.event-page .comment-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.event-page .event-comment-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.event-page .event-comment-form input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 16px;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.event-page .event-comment-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.event-page .event-comment-form button {
+  border: none;
+  background: var(--heading);
+  color: var(--bg);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* «Похожие мероприятия» — горизонтальная лента */
+.event-page .other-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  margin: 0 -20px;
+  padding: 0 20px 4px;
+  scrollbar-width: none;
+}
+
+.event-page .other-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* КЛЮЧЕВОЕ: карточка — это <a>/<button>, поэтому обнуляем padding, чтобы фото было full-bleed первым элементом */
+.event-page .other-card,
+.event-page .other-card:link,
+.event-page .other-card:visited {
+  flex-shrink: 0;
+  width: 230px;
+  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.event-page .other-photo {
+  height: 110px;
+  position: relative;
+}
+
+.event-page .other-pill {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink);
+  border: none;
+}
+
+.event-page .other-initiator {
+  left: 8px;
+  padding: 3px 9px 3px 3px;
+}
+
+.event-page .other-initiator .post-avatar {
+  width: 18px;
+  height: 18px;
+  font-size: 0.5rem;
+}
+
+.event-page .other-tags {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.event-page .other-tag {
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--ink);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+
+.event-page .other-body {
+  padding: 11px 12px 12px;
+}
+
+.event-page .other-distance {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 3px;
+}
+
+.event-page .other-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.28;
+  margin-bottom: 6px;
+}
+
+.event-page .other-meta {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--heading);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.event-page .other-meta svg {
+  flex-shrink: 0;
+}
+
+.event-page .other-going {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.event-page .other-going-avatars {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.event-page .other-going-avatars .post-avatar {
+  width: 20px;
+  height: 20px;
+  font-size: 0.5rem;
+  border: 2px solid var(--card);
+  margin-left: -7px;
+}
+
+.event-page .other-going-avatars .post-avatar:first-child {
+  margin-left: 0;
+}
+
+.event-page .other-going-text {
+  font-size: 11px;
+  color: var(--ink-secondary);
+}
+
+.event-page .other-going-text b {
+  color: var(--heading);
+}
+
+.event-page .bottom-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+}
+
+.event-page .bottom-bar .going-count {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.event-page .rsvp-group {
+  display: flex;
+  gap: 8px;
+}
+
+.event-page .ev-rsvp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  border: 1.5px solid var(--accent-secondary);
+  background: var(--card);
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.event-page .ev-rsvp-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.event-page .ev-rsvp-btn.on {
+  background: var(--heading);
+  border-color: var(--heading);
+  color: var(--bg);
+}
+
+.event-page .ev-rsvp-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 84px;
+  transform: translate(-50%, 12px);
+  background: var(--heading);
+  color: var(--bg);
+  padding: 11px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }

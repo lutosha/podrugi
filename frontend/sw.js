@@ -1,4 +1,4 @@
-const CACHE_NAME = 'podrugi-v2';
+const CACHE_NAME = 'podrugi-v4';
 
 const PRECACHE_URLS = [
   '/',
@@ -9,6 +9,7 @@ const PRECACHE_URLS = [
   '/moderation.html',
   '/notifications.html',
   '/post.html',
+  '/event.html',
   '/guidelines.html',
   '/privacy.html',
   '/style.css',
@@ -19,6 +20,7 @@ const PRECACHE_URLS = [
   '/moderation.js',
   '/notifications.js',
   '/post.js',
+  '/event.js',
   '/manifest.json',
   '/assets/logo.svg',
   '/assets/icon-192.png',

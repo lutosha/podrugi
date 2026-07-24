@@ -948,41 +948,6 @@ a.post-card:visited {
   display: block;
 }
 
-.flag-corner {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
-}
-
-.flag-corner .flag-btn {
-  min-height: 32px;
-  min-width: 32px;
-  padding: 0.3rem;
-}
-
-.flag-corner .flag-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.flag-corner .flag-menu {
-  left: auto;
-  right: 0;
-}
-
-/* на карточке события справа сверху уже есть «поделиться» (right:10px) — флажок ставим левее */
-.discover-card .flag-corner {
-  right: 48px;
-}
-
-/* поверх фото-обложки события флажку нужен видимый фон */
-.discover-card .flag-corner .flag-btn {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(6px);
-  border-radius: 50%;
-}
-
 .flag-menu {
   position: absolute;
   top: calc(100% + 4px);

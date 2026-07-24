@@ -43,11 +43,7 @@ const authTabRegister = document.getElementById('authTabRegister');
 
 const TYPE_LABELS = { POST: 'Пост', ANNOUNCEMENT: 'Ищу компанию', EVENT: 'Событие' };
 
-const FLAG_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
-
-const HEART_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-
-// иконки карточек — как в мокапе, inline SVG (тот же принцип, что FLAG_ICON_SVG)
+// иконки карточек — как в мокапе, inline SVG
 const HEART_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2 4 6 3.2c2.3-.4 4.3.7 6 2.8 1.7-2.1 3.7-3.2 6-2.8 4 .8 5.5 4.8 4 8.5-2.5 4.7-10 9.3-10 9.3Z" stroke="currentColor" stroke-width="1.7"/></svg>';
 const COMMENT_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-width="1.7"/></svg>';
 const ADD_FRIEND_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.3" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3 2.9-5 6-5s5.4 2 6 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -423,86 +419,6 @@ function buildActionRow(post, commentsSection) {
   return row;
 }
 
-// флажок «пожаловаться/заблокировать» в углу карточки (в мокапе этого нет — это наша функция безопасности)
-function buildFlagCorner(post) {
-  const flagWrap = document.createElement('div');
-  flagWrap.className = 'flag-wrap flag-corner';
-
-  const flagBtn = document.createElement('button');
-  flagBtn.type = 'button';
-  flagBtn.className = 'flag-btn';
-  flagBtn.title = 'Пожаловаться или заблокировать';
-  flagBtn.innerHTML = FLAG_ICON_SVG;
-
-  const flagMenu = document.createElement('div');
-  flagMenu.className = 'flag-menu hidden';
-
-  const reportForm = document.createElement('form');
-  reportForm.className = 'report-form hidden';
-  const reasonInput = document.createElement('input');
-  reasonInput.type = 'text';
-  reasonInput.placeholder = 'Причина жалобы...';
-  reasonInput.maxLength = 500;
-  reasonInput.required = true;
-  const reportSubmit = document.createElement('button');
-  reportSubmit.type = 'submit';
-  reportSubmit.className = 'btn btn-secondary';
-  reportSubmit.textContent = 'Отправить';
-  reportForm.append(reasonInput, reportSubmit);
-
-  const reportMenuBtn = document.createElement('button');
-  reportMenuBtn.type = 'button';
-  reportMenuBtn.textContent = 'Пожаловаться';
-  reportMenuBtn.addEventListener('click', () => {
-    flagMenu.classList.add('hidden');
-    reportForm.classList.remove('hidden');
-  });
-  flagMenu.appendChild(reportMenuBtn);
-
-  flagBtn.addEventListener('click', () => {
-    document.querySelectorAll('.flag-menu').forEach((m) => {
-      if (m !== flagMenu) m.classList.add('hidden');
-    });
-    flagMenu.classList.toggle('hidden');
-  });
-
-  reportForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE_URL}/api/reports`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ targetType: 'POST', targetId: post.id, reason: reasonInput.value }),
-    });
-    if (res.ok) {
-      reportForm.classList.add('hidden');
-      reasonInput.value = '';
-      reportMenuBtn.textContent = 'Жалоба отправлена';
-      reportMenuBtn.disabled = true;
-    }
-  });
-
-  if (currentUser && currentUser.id !== post.author.id) {
-    const blockMenuBtn = document.createElement('button');
-    blockMenuBtn.type = 'button';
-    blockMenuBtn.textContent = 'Заблокировать';
-    blockMenuBtn.addEventListener('click', async () => {
-      flagMenu.classList.add('hidden');
-      if (!confirm(`Заблокировать ${post.author.name}? Её посты перестанут показываться тебе.`)) return;
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/block/${post.author.id}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) fetchPosts();
-    });
-    flagMenu.appendChild(blockMenuBtn);
-  }
-
-  flagWrap.append(flagBtn, flagMenu);
-  return { flagWrap, reportForm };
-}
-
 function renderPosts(posts) {
   postsList.innerHTML = '';
   if (posts.length === 0) {
@@ -555,12 +471,6 @@ function renderPosts(posts) {
 
     top.append(avatar, body);
     card.appendChild(top);
-
-    if (currentUser) {
-      const { flagWrap, reportForm } = buildFlagCorner(post);
-      card.appendChild(flagWrap);
-      body.appendChild(reportForm);
-    }
 
     postsList.appendChild(card);
   }
@@ -718,12 +628,6 @@ function renderEventCards(posts) {
     const comments = buildCommentsSection(post);
     footer.appendChild(buildActionRow(post, comments));
 
-    if (currentUser) {
-      const { flagWrap, reportForm } = buildFlagCorner(post);
-      card.appendChild(flagWrap);
-      bodyEl.appendChild(reportForm);
-    }
-
     bodyEl.appendChild(footer);
     bodyEl.appendChild(comments);
 
@@ -869,11 +773,6 @@ async function fetchProfile() {
   fetchPosts();
 }
 
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.flag-wrap')) {
-    document.querySelectorAll('.flag-menu').forEach((m) => m.classList.add('hidden'));
-  }
-});
 
 composeNavBtn.addEventListener('click', (e) => {
   e.preventDefault();

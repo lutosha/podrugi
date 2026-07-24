@@ -123,6 +123,10 @@
           <button type="button" class="type-tab" data-type="EVENT">Мероприятие</button>
           <button type="button" class="type-tab" data-type="POST">Пост</button>
         </div>
+        <div class="field hidden" id="eventTitleField">
+          <label for="postTitle">Название события</label>
+          <input type="text" id="postTitle" placeholder="Например: Утренний свим-клуб у Serpentine Lido" maxlength="100" />
+        </div>
         <div class="field">
           <label for="postContent">Текст</label>
           <textarea id="postContent" required maxlength="2000"></textarea>
@@ -136,6 +140,14 @@
         <div class="field hidden" id="eventDateField">
           <label for="postEventDate">Дата и время события</label>
           <input type="datetime-local" id="postEventDate" />
+        </div>
+        <div class="field hidden" id="eventVenueField">
+          <label for="postVenue">Место проведения (необязательно)</label>
+          <input type="text" id="postVenue" placeholder="Например: Serpentine Lido" maxlength="100" />
+        </div>
+        <div class="field hidden" id="eventAddressField">
+          <label for="postAddress">Точный адрес (необязательно)</label>
+          <input type="text" id="postAddress" placeholder="Например: Hyde Park, London W2 2UY" maxlength="200" />
         </div>
         <div class="field hidden" id="eventLimitField">
           <label for="postMaxParticipants">Лимит участников (необязательно)</label>

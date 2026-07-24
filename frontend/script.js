@@ -16,10 +16,16 @@ const closePostModalBtn = document.getElementById('closePostModal');
 const postForm = document.getElementById('postForm');
 const postContentInput = document.getElementById('postContent');
 const postBoroughInput = document.getElementById('postBorough');
+const postTitleInput = document.getElementById('postTitle');
 const postEventDateInput = document.getElementById('postEventDate');
+const postVenueInput = document.getElementById('postVenue');
+const postAddressInput = document.getElementById('postAddress');
 const postMaxParticipantsInput = document.getElementById('postMaxParticipants');
 const postTagsInput = document.getElementById('postTags');
+const eventTitleField = document.getElementById('eventTitleField');
 const eventDateField = document.getElementById('eventDateField');
+const eventVenueField = document.getElementById('eventVenueField');
+const eventAddressField = document.getElementById('eventAddressField');
 const eventLimitField = document.getElementById('eventLimitField');
 const eventTagsField = document.getElementById('eventTagsField');
 const typeTabs = document.querySelectorAll('.type-tab');
@@ -165,8 +171,12 @@ function setPostType(type) {
   selectedType = type;
   typeTabs.forEach((t) => t.classList.toggle('active', t.dataset.type === type));
   const isEvent = selectedType === 'EVENT';
+  eventTitleField.classList.toggle('hidden', !isEvent);
+  postTitleInput.required = isEvent;
   eventDateField.classList.toggle('hidden', !isEvent);
   postEventDateInput.required = isEvent;
+  eventVenueField.classList.toggle('hidden', !isEvent);
+  eventAddressField.classList.toggle('hidden', !isEvent);
   eventLimitField.classList.toggle('hidden', !isEvent);
   eventTagsField.classList.toggle('hidden', !isEvent);
   postContentInput.placeholder = POST_PLACEHOLDERS[type] || '';
@@ -731,9 +741,16 @@ function renderEventCards(posts) {
     const card = document.createElement('div');
     card.className = 'discover-card';
 
+    const eventUrl = `event.html?id=${post.id}`;
+
     const photo = document.createElement('div');
     photo.className = 'discover-photo';
+    photo.style.cursor = 'pointer';
     photo.style.background = COVER_GRAD[post.id % COVER_GRAD.length];
+    // клик по фото (мимо пилюл автора/поделиться) открывает страницу мероприятия
+    photo.addEventListener('click', (e) => {
+      if (!e.target.closest('.discover-pill')) window.location.href = eventUrl;
+    });
 
     const initiator = document.createElement('a');
     initiator.className = 'discover-pill discover-initiator';
@@ -748,7 +765,7 @@ function renderEventCards(posts) {
     shareBtn.setAttribute('aria-label', 'Поделиться');
     shareBtn.innerHTML = SHARE_SVG;
     shareBtn.addEventListener('click', async () => {
-      const text = `${firstSentence(post.content)} — ${location.origin}${location.pathname}`;
+      const text = `${post.title || firstSentence(post.content)} — ${location.origin}${location.pathname}`;
       try {
         await navigator.clipboard.writeText(text);
       } catch {
@@ -781,9 +798,10 @@ function renderEventCards(posts) {
       bodyEl.appendChild(distance);
     }
 
-    const headline = document.createElement('div');
+    const headline = document.createElement('a');
     headline.className = 'card-headline';
-    headline.textContent = firstSentence(post.content);
+    headline.href = eventUrl;
+    headline.textContent = post.title || firstSentence(post.content);
     bodyEl.appendChild(headline);
 
     const eventDate = document.createElement('div');
@@ -1004,7 +1022,10 @@ postForm.addEventListener('submit', async (e) => {
     borough: postBoroughInput.value,
   };
   if (selectedType === 'EVENT') {
+    body.title = postTitleInput.value;
     body.eventDate = postEventDateInput.value;
+    body.venue = postVenueInput.value;
+    body.address = postAddressInput.value;
     body.maxParticipants = postMaxParticipantsInput.value;
     body.tags = postTagsInput.value
       .split(',')
